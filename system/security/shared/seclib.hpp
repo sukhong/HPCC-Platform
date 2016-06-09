@@ -315,7 +315,6 @@ interface ISecManager : extends IInterface
     virtual bool authenticateUser(ISecUser & user, bool &superUser) = 0;
     virtual secManagerType querySecMgrType() = 0;
     virtual const char* querySecMgrTypeName() = 0;
-    virtual int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column) = 0;//@@
 };
 
 interface IRestartHandler : extends IInterface

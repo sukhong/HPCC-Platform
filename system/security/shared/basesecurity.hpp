@@ -106,7 +106,7 @@ public:
         return false;
     }
 
-    virtual int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)//@@
+    int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)//@@
     {
         UNIMPLEMENTED;
         return false;

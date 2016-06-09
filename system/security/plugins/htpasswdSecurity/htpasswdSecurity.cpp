@@ -147,7 +147,7 @@ protected:
         return SecAccess_Full;//grant full access to authenticated users
     }
 //@@
-    virtual int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)
+    int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)
     {
         return SecAccess_Full;//grant full access to authenticated users
     }
