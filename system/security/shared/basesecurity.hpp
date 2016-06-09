@@ -106,6 +106,12 @@ public:
         return false;
     }
 
+    virtual int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)//@@
+    {
+        UNIMPLEMENTED;
+        return false;
+    }
+
     bool addResources(ISecUser & user, ISecResourceList * resources)
     {
         UNIMPLEMENTED;
