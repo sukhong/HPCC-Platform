@@ -146,6 +146,11 @@ protected:
     {
         return SecAccess_Full;//grant full access to authenticated users
     }
+//@@
+    int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)
+    {
+        return SecAccess_Full;//grant full access to authenticated users
+    }
 
     int authorizeWorkunitScope(ISecUser & user, const char * filescope) override
     {

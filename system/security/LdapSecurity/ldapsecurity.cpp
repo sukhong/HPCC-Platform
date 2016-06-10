@@ -864,6 +864,15 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
     return authorizeEx(RT_FILE_SCOPE, user, resources);
 }
 
+int CLdapSecManager::authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)//@@
+{
+    if ( (lfn == 0 || lfn[0] == '\0') || (column == 0 || column[0] == '\0'))
+        return SecAccess_Full;
+
+
+    return -1;
+}
+
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)
 {
     if(wuscope == 0 || wuscope[0] == '\0')
