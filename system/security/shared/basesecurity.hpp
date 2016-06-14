@@ -106,7 +106,7 @@ public:
         return false;
     }
 
-    int authorizeColumnScope(ISecUser & user, const char * lfn, const char * column)//@@
+    int authorizeColumnScope(ISecUser & user, const char * lfn, StringArray & arrColumns)//@@
     {
         UNIMPLEMENTED;
         return false;

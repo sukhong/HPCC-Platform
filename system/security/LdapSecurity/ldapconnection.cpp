@@ -1781,6 +1781,31 @@ public:
 
             return ok;
         }
+//@@begin
+        else if (rtype == RT_COLUMN_SCOPE)
+        {
+            ForEachItemIn(idx, resources)
+            {
+                ISecResource& res = resources.item(idx);
+                const char* lfn = res.getName();
+                if (lfn == NULL || *lfn == '\0')
+                    res.setAccessFlags(SecAccess_Full);
+                else
+                {
+                    StringAttr col;
+                    col.set(res.getParameter("fieldName"));
+                    if (col.isEmpty())
+                        res.setAccessFlags(SecAccess_Full);
+                    else
+                    {
+                        DBGLOG("RT_COLUMN_SCOPE %s::%s", lfn, col.str());
+                        //TODO Call LDAP to check perms
+                    }
+                }
+            }
+            return ok;
+        }
+//@@end
         else
         {
             IArrayOf<CSecurityDescriptor> sdlist;
