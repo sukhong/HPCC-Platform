@@ -865,18 +865,16 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
 }
 //@@
 //For all lfn/column resources in the given ISecResourceList, retrieve perms and set them in their respective ISecResource
-//Each ISecResource must have 2 parameters set, "file" and "field"
+//Each ISecResource must have 2 parameters set, "file" and "column"
 bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
 {
-//    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
-//    if(!reslist)
-//        return true;
+    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
+    if(!reslist)
+        return true;
 
     //TODO Check ColumnScope Cache
 
 /*following to be done by caller
-    IArrayOf<ISecResource> arrResources;
-
     //Create resource list for Logical File and all columns
     Owned<ISecResourceList> resList;
     resList.setown(createResourceList("ColumnScope"));
@@ -884,9 +882,8 @@ bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * r
     {
         ISecResource* res = resList->addResource(lfn);
         res->addParameter("file", lfn );
-        res->addParameter("field", arrColumns.item(idx) );
+        res->addParameter("column", arrColumns.item(idx) );
         res->setResourceType(RT_COLUMN_SCOPE);
-        arrResources.append(*res);
     }
 */
     //Call LDAP to authorize the resourceList

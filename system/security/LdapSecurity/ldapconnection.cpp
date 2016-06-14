@@ -1797,24 +1797,38 @@ public:
 //@@begin
         else if (rtype == RT_COLUMN_SCOPE)
         {
-            ForEachItemIn(idx, resources)
+            IArrayOf<ISecResource> non_emptylist;//list of permissions to check
+            defPerm = queryDefaultPermission(user);//default perm to be applied when no lfn or column provided
+            StringAttr lfn;
+            StringAttr col;
+            ForEachItemIn(idx, resources)//Iterate over all resources in list
             {
                 ISecResource& res = resources.item(idx);
-                const char* lfn = res.getName();
-                if (lfn == NULL || *lfn == '\0')
-                    res.setAccessFlags(SecAccess_Full);
+                assertex(res && RT_COLUMN_SCOPE == res.getResourceType());
+
+                lfn.set(res.getParameter("file"));
+                col.set(res.getParameter("column"));
+
+                if(lfn.isEmpty() || col.isEmpty())
+                    res.setAccessFlags(defPerm);
                 else
+                    non_emptylist.append(*LINK(&res));//add to list to be checked
+#ifdef _DEBUG
+                DBGLOG("Checking RT_COLUMN_SCOPE %s::%s", lfn.str(), col.str());
+#endif
+                //Call LDAP to check perms
+                ok = authorizeScope(user, non_emptylist, basedn);
+                if(ok && defPerm != -2)
                 {
-                    StringAttr col;
-                    col.set(res.getParameter("fieldName"));
-                    if (col.isEmpty())
-                        res.setAccessFlags(SecAccess_Full);
-                    else
+                    ForEachItemIn(x, non_emptylist)
                     {
-                        DBGLOG("RT_COLUMN_SCOPE %s::%s", lfn, col.str());
-                        //TODO Call LDAP to check perms
+                        ISecResource& res = non_emptylist.item(x);
+                        if(res.getAccessFlags() == -1)
+                            res.setAccessFlags(defPerm);
                     }
                 }
+                else
+                    break;
             }
             return ok;
         }
@@ -5336,7 +5350,7 @@ private:
         if(strchr(resourcename, '/') != NULL || strchr(resourcename, '=') != NULL)
             return false;
 
-        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || type == RT_COLUMN_SCOPE)//@@
+        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || rtype == RT_COLUMN_SCOPE)//@@
         {
             StringBuffer extbuf;
             name2dn(rtype, resourcename, rbasedn, extbuf);
