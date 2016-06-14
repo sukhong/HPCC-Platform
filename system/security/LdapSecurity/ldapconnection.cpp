@@ -1798,13 +1798,13 @@ public:
         else if (rtype == RT_COLUMN_SCOPE)
         {
             IArrayOf<ISecResource> non_emptylist;//list of permissions to check
-            defPerm = queryDefaultPermission(user);//default perm to be applied when no lfn or column provided
+            int defPerm = queryDefaultPermission(user);//default perm to be applied when no lfn or column provided
             StringAttr lfn;
             StringAttr col;
             ForEachItemIn(idx, resources)//Iterate over all resources in list
             {
                 ISecResource& res = resources.item(idx);
-                assertex(res && RT_COLUMN_SCOPE == res.getResourceType());
+                assertex(RT_COLUMN_SCOPE == res.getResourceType());
 
                 lfn.set(res.getParameter("file"));
                 col.set(res.getParameter("column"));

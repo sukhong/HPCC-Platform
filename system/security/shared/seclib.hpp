@@ -69,7 +69,7 @@ enum SecResourceType
     RT_WORKUNIT_SCOPE = 4,
     RT_SUDOERS = 5,
     RT_TRIAL = 6,
-    RT_COLUMN_SCOPE = 7,//@@
+    RT_COLUMN_SCOPE = 7,
     RT_SCOPE_MAX = 8
 };
 
@@ -281,7 +281,7 @@ interface ISecManager : extends IInterface
     virtual int getAccessFlagsEx(SecResourceType rtype, ISecUser & user, const char * resourcename) = 0;
     virtual int authorizeFileScope(ISecUser & user, const char * filescope) = 0;
     virtual bool authorizeFileScope(ISecUser & user, ISecResourceList * resources) = 0;
-    virtual bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources) = 0;//@@
+    virtual bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources) = 0;
     virtual bool addResources(ISecUser & user, ISecResourceList * resources) = 0;
     virtual bool addResourcesEx(SecResourceType rtype, ISecUser & user, ISecResourceList * resources, SecPermissionType ptype, const char * basedn) = 0;
     virtual bool addResourceEx(SecResourceType rtype, ISecUser & user, const char * resourcename, SecPermissionType ptype, const char * basedn) = 0;

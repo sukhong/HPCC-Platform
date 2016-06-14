@@ -147,7 +147,7 @@ protected:
         return SecAccess_Full;//grant full access to authenticated users
     }
 
-    bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources)//@@
+    bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
     {
         int nResources = resources->count();
         for (int ri = 0; ri < nResources; ri++)

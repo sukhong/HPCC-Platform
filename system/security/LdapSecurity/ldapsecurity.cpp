@@ -864,18 +864,12 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
     return authorizeEx(RT_FILE_SCOPE, user, resources);
 }
 //@@
-//For all lfn/column resources in the given ISecResourceList, retrieve perms and set them in their respective ISecResource
+//For all lfn/column resources in the given ISecResourceList, retrieve
+//perms and set them in their respective ISecResource entry.
 //Each ISecResource must have 2 parameters set, "file" and "column"
-bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
-{
-    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
-    if(!reslist)
-        return true;
-
-    //TODO Check ColumnScope Cache
 
 /*following to be done by caller
-    //Create resource list for Logical File and all columns
+    //Create resource list for each Logical File and columns combos
     Owned<ISecResourceList> resList;
     resList.setown(createResourceList("ColumnScope"));
     for(int idx = 0; idx < arrColumns.length(); idx++)
@@ -886,8 +880,12 @@ bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * r
         res->setResourceType(RT_COLUMN_SCOPE);
     }
 */
-    //Call LDAP to authorize the resourceList
-    return m_ldap_client->authorize(RT_COLUMN_SCOPE, user, reslist->getResourceList());//perms for each resource stored in resList access flags
+bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
+{
+    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
+    if(!reslist)
+        return true;
+    return m_ldap_client->authorize(RT_COLUMN_SCOPE, user, reslist->getResourceList());
 }
 
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)
