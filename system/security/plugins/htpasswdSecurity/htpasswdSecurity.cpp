@@ -146,10 +146,20 @@ protected:
     {
         return SecAccess_Full;//grant full access to authenticated users
     }
-//@@
-    int authorizeColumnScope(ISecUser & user, const char * lfn, StringArray & arrColumns)
+
+    bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources)//@@
     {
-        return SecAccess_Full;//grant full access to authenticated users
+        int nResources = resources->count();
+        for (int ri = 0; ri < nResources; ri++)
+        {
+            ISecResource* res = resources.queryResource(ri);
+            if(res != nullptr)
+            {
+                assertex(res->getResourceType() == RT_COLUMN_SCOPE);
+                res->queryResource(SecAccess_Full);//grant full access to authenticated users
+            }
+        }
+        return true;//success
     }
 
     int authorizeWorkunitScope(ISecUser & user, const char * filescope) override

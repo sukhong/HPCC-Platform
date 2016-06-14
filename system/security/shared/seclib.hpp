@@ -281,7 +281,7 @@ interface ISecManager : extends IInterface
     virtual int getAccessFlagsEx(SecResourceType rtype, ISecUser & user, const char * resourcename) = 0;
     virtual int authorizeFileScope(ISecUser & user, const char * filescope) = 0;
     virtual bool authorizeFileScope(ISecUser & user, ISecResourceList * resources) = 0;
-    virtual int authorizeColumnScope(ISecUser & user, const char * lfn, StringArray & arrColumns) = 0;//@@
+    virtual bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources) = 0;//@@
     virtual bool addResources(ISecUser & user, ISecResourceList * resources) = 0;
     virtual bool addResourcesEx(SecResourceType rtype, ISecUser & user, ISecResourceList * resources, SecPermissionType ptype, const char * basedn) = 0;
     virtual bool addResourceEx(SecResourceType rtype, ISecUser & user, const char * resourcename, SecPermissionType ptype, const char * basedn) = 0;

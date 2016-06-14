@@ -240,6 +240,7 @@ private:
     StringBuffer         m_group_basedn;
     StringBuffer         m_resource_basedn;
     StringBuffer         m_filescope_basedn;
+    StringBuffer         m_columnscope_basedn;//@@
     StringBuffer         m_workunitscope_basedn;
     StringBuffer         m_sudoers_basedn;
     StringBuffer         m_template_name;
@@ -372,6 +373,11 @@ public:
         cfg->getProp(".//@filesBasedn", dnbuf);
         if(dnbuf.length() > 0)
             LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_filescope_basedn);
+//@@
+        dnbuf.clear();
+        cfg->getProp(".//@columnsBasedn", dnbuf);
+        if(dnbuf.length() > 0)
+            LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_columnscope_basedn);
 
         dnbuf.clear();
         cfg->getProp(".//@workunitsBasedn", dnbuf);
@@ -560,6 +566,8 @@ public:
             return m_resource_basedn.str();
         else if(rtype == RT_FILE_SCOPE)
             return m_filescope_basedn.str();
+        else if(rtype == RT_COLUMN_SCOPE)//@@
+            return m_columnscope_basedn.str();//@@
         else if(rtype == RT_WORKUNIT_SCOPE)
             return m_workunitscope_basedn.str();
         else if(rtype == RT_SUDOERS)
@@ -621,6 +629,10 @@ public:
         else if(rtype == RT_FILE_SCOPE)
         {
             LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_filescope_basedn);
+        }
+        else if(rtype == RT_COLUMN_SCOPE)//@@
+        {
+            LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_columnscope_basedn);//@@
         }
         else if(rtype == RT_WORKUNIT_SCOPE)
         {
@@ -1371,6 +1383,7 @@ public:
             }
             createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_DEFAULT), PT_ADMINISTRATORS_ONLY);
             createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_FILE_SCOPE), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_COLUMN_SCOPE), PT_ADMINISTRATORS_ONLY);//@@
             createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_WORKUNIT_SCOPE), PT_ADMINISTRATORS_ONLY);
             createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_SUDOERS), PT_ADMINISTRATORS_ONLY);
 
@@ -3298,7 +3311,7 @@ public:
                 CLdapSecResource* resource = new CLdapSecResource(resourcename.str());
                 resource->setDescription(descbuf.str());
                 resources.append(*resource);
-                if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE)
+                if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || rtype == RT_COLUMN_SCOPE)//@@
                 {
                     StringBuffer nextbasedn;
                     nextbasedn.append("ou=").append(curname.str()).append(",").append(basedn);
@@ -3378,7 +3391,7 @@ public:
             CLdapSecResource* resource = new CLdapSecResource(resourcename.str());
             resource->setDescription(descbuf.str());
             resources.append(*resource);
-            if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE)
+            if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || rtype == RT_COLUMN_SCOPE)//@@
             {
                 StringBuffer nextbasedn;
                 nextbasedn.append("ou=").append(curname.str()).append(",").append(basedn);
@@ -3489,7 +3502,7 @@ public:
         Owned<CSecurityDescriptor> sd = new CSecurityDescriptor(name);
         IArrayOf<CSecurityDescriptor> sdlist;
         sdlist.append(*LINK(sd));
-        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE)
+        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || rtype == RT_COLUMN_SCOPE)//@@
             getSecurityDescriptorsScope(sdlist, basednbuf.str());
         else
             getSecurityDescriptors(sdlist, basednbuf.str());
@@ -3637,7 +3650,7 @@ public:
         Owned<CSecurityDescriptor> sd = new CSecurityDescriptor(action.m_rname.str());
         IArrayOf<CSecurityDescriptor> sdlist;
         sdlist.append(*LINK(sd));
-        if(action.m_rtype == RT_FILE_SCOPE || action.m_rtype == RT_WORKUNIT_SCOPE)
+        if(action.m_rtype == RT_FILE_SCOPE || action.m_rtype == RT_WORKUNIT_SCOPE || action.m_rtype == RT_COLUMN_SCOPE)//@@
             getSecurityDescriptorsScope(sdlist, basednbuf.str());
         else
             getSecurityDescriptors(sdlist, basednbuf.str());
@@ -4242,7 +4255,7 @@ public:
         Owned<CSecurityDescriptor> sd = new CSecurityDescriptor(oldname);
         IArrayOf<CSecurityDescriptor> sdlist;
         sdlist.append(*LINK(sd));
-        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE)
+        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || rtype == RT_COLUMN_SCOPE)//@@
             getSecurityDescriptorsScope(sdlist, basedn);
         else
             getSecurityDescriptors(sdlist, basedn);
@@ -5323,7 +5336,7 @@ private:
         if(strchr(resourcename, '/') != NULL || strchr(resourcename, '=') != NULL)
             return false;
 
-        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE)
+        if(rtype == RT_FILE_SCOPE || rtype == RT_WORKUNIT_SCOPE || type == RT_COLUMN_SCOPE)//@@
         {
             StringBuffer extbuf;
             name2dn(rtype, resourcename, rbasedn, extbuf);

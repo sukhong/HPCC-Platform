@@ -858,23 +858,23 @@ int CLdapSecManager::authorizeFileScope(ISecUser & user, const char * filescope)
     else
         return -1;
 }
-    
+
 bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * resources)
 {
     return authorizeEx(RT_FILE_SCOPE, user, resources);
 }
-//
-//ISecResourceList * Resources
-int CLdapSecManager::authorizeColumnScope(ISecUser & user, const char * lfn, StringArray & arrColumns)//@@TODO Call should pass in ISecResourceList
+//@@
+//For all lfn/column resources in the given ISecResourceList, retrieve perms and set them in their respective ISecResource
+//Each ISecResource must have 2 parameters set, "file" and "field"
+bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
 {
-//    if(!authenticate(&user))
-//        return false;
-
-    if ((lfn == 0 || lfn[0] == '\0') || 0 == arrColumns.length())
-        return SecAccess_Full;
+//    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
+//    if(!reslist)
+//        return true;
 
     //TODO Check ColumnScope Cache
 
+/*following to be done by caller
     IArrayOf<ISecResource> arrResources;
 
     //Create resource list for Logical File and all columns
@@ -883,18 +883,14 @@ int CLdapSecManager::authorizeColumnScope(ISecUser & user, const char * lfn, Str
     for(int idx = 0; idx < arrColumns.length(); idx++)
     {
         ISecResource* res = resList->addResource(lfn);
-        res->addParameter("fieldName", arrColumns.item(idx) );
+        res->addParameter("file", lfn );
+        res->addParameter("field", arrColumns.item(idx) );
         res->setResourceType(RT_COLUMN_SCOPE);
         arrResources.append(*res);
     }
-
+*/
     //Call LDAP to authorize the resourceList
-    if (m_ldap_client->authorize(RT_COLUMN_SCOPE, user, arrResources))
-    {
-        //TODO add to ColumnScope Cache
-        return resList->queryResource(0)->getAccessFlags();//perms for each resource stored in resList access flags
-    }
-    return -1;
+    return m_ldap_client->authorize(RT_COLUMN_SCOPE, user, reslist->getResourceList());//perms for each resource stored in resList access flags
 }
 
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)
