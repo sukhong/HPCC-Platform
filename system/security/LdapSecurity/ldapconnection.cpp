@@ -240,7 +240,8 @@ private:
     StringBuffer         m_group_basedn;
     StringBuffer         m_resource_basedn;
     StringBuffer         m_filescope_basedn;
-    StringBuffer         m_columnscope_basedn;//@@
+    StringBuffer         m_columnscope_basedn;
+    StringBuffer         m_view_basedn;
     StringBuffer         m_workunitscope_basedn;
     StringBuffer         m_sudoers_basedn;
     StringBuffer         m_template_name;
@@ -373,11 +374,16 @@ public:
         cfg->getProp(".//@filesBasedn", dnbuf);
         if(dnbuf.length() > 0)
             LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_filescope_basedn);
-//@@
+
         dnbuf.clear();
         cfg->getProp(".//@columnsBasedn", dnbuf);
-        if(dnbuf.length() > 0)
+        if (dnbuf.length() > 0)
             LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_columnscope_basedn);
+
+        dnbuf.clear();
+        cfg->getProp(".//@viewsBasedn", dnbuf);
+        if(dnbuf.length() > 0)
+            LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_view_basedn);
 
         dnbuf.clear();
         cfg->getProp(".//@workunitsBasedn", dnbuf);
@@ -566,8 +572,10 @@ public:
             return m_resource_basedn.str();
         else if(rtype == RT_FILE_SCOPE)
             return m_filescope_basedn.str();
-        else if(rtype == RT_COLUMN_SCOPE)//@@
-            return m_columnscope_basedn.str();//@@
+        else if(rtype == RT_COLUMN_SCOPE)
+            return m_columnscope_basedn.str();
+        else if(rtype == RT_VIEW)
+            return m_view_basedn.str();
         else if(rtype == RT_WORKUNIT_SCOPE)
             return m_workunitscope_basedn.str();
         else if(rtype == RT_SUDOERS)
@@ -630,9 +638,13 @@ public:
         {
             LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_filescope_basedn);
         }
-        else if(rtype == RT_COLUMN_SCOPE)//@@
+        else if(rtype == RT_COLUMN_SCOPE)
         {
-            LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_columnscope_basedn);//@@
+            LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_columnscope_basedn);
+        }
+        else if(rtype == RT_VIEW)
+        {
+            LdapUtils::normalizeDn(rbasedn, m_basedn.str(), m_view_basedn);
         }
         else if(rtype == RT_WORKUNIT_SCOPE)
         {
@@ -1360,37 +1372,38 @@ public:
     virtual void init(IPermissionProcessor* pp)
     {
         m_pp = pp;
-        if(m_ldapconfig->getServerType() == OPEN_LDAP)
-        {
-            static bool createdOU = false;
-            CriticalBlock block(lcCrit);
-            if (!createdOU)
-            {
-                try
-                {
-                    addDC(m_ldapconfig->getBasedn());
-                }
-                catch(...)
-                {
-                }
-                try
-                {
-                addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
-                }
-                catch(...)
-                {
-                }
-            }
-            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_DEFAULT), PT_ADMINISTRATORS_ONLY);
-            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_FILE_SCOPE), PT_ADMINISTRATORS_ONLY);
-            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_COLUMN_SCOPE), PT_ADMINISTRATORS_ONLY);//@@
-            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_WORKUNIT_SCOPE), PT_ADMINISTRATORS_ONLY);
-            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_SUDOERS), PT_ADMINISTRATORS_ONLY);
+        static bool createdOU = false;
+        CriticalBlock block(lcCrit);
+        if (!createdOU)
+		{
+			if(m_ldapconfig->getServerType() == OPEN_LDAP)
+			{
+				try
+				{
+					addDC(m_ldapconfig->getBasedn());
+				}
+				catch(...)
+				{
+				}
+				try
+				{
+				addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
+				}
+				catch(...)
+				{
+				}
+			}
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_DEFAULT), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_FILE_SCOPE), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_COLUMN_SCOPE), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_VIEW), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_WORKUNIT_SCOPE), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_SUDOERS), PT_ADMINISTRATORS_ONLY);
 
-            createLdapBasedn(NULL, m_ldapconfig->getUserBasedn(), PT_ADMINISTRATORS_ONLY);
-            createLdapBasedn(NULL, m_ldapconfig->getGroupBasedn(), PT_ADMINISTRATORS_ONLY);
-            createdOU = true;
-        }
+			createLdapBasedn(NULL, m_ldapconfig->getUserBasedn(), PT_ADMINISTRATORS_ONLY);
+			createLdapBasedn(NULL, m_ldapconfig->getGroupBasedn(), PT_ADMINISTRATORS_ONLY);
+			createdOU = true;
+		}
     }
 
     virtual LdapServerType getServerType()
@@ -1795,43 +1808,41 @@ public:
             return ok;
         }
 //@@begin
-        else if (rtype == RT_COLUMN_SCOPE)
-        {
-            IArrayOf<ISecResource> non_emptylist;//list of permissions to check
-            int defPerm = queryDefaultPermission(user);//default perm to be applied when no lfn or column provided
-            StringAttr lfn;
-            StringAttr col;
-            ForEachItemIn(idx, resources)//Iterate over all resources in list
-            {
-                ISecResource& res = resources.item(idx);
-                assertex(RT_COLUMN_SCOPE == res.getResourceType());
+		else if (rtype == RT_COLUMN_SCOPE) {
+			IArrayOf<ISecResource> non_emptylist; //list of permissions to check
+			int defPerm = queryDefaultPermission(user); //default perm to be applied when no lfn or column provided
+			StringAttr lfn;
+			StringAttr col;
+			ForEachItemIn(idx, resources) //Iterate over all resources in list
+			{
+				ISecResource& res = resources.item(idx);
+				assertex(RT_COLUMN_SCOPE == res.getResourceType());
 
-                lfn.set(res.getParameter("file"));
-                col.set(res.getParameter("column"));
+				lfn.set(res.getParameter("file"));
+				col.set(res.getParameter("column"));
 
-                if(lfn.isEmpty() || col.isEmpty())
-                    res.setAccessFlags(defPerm);
-                else
-                    non_emptylist.append(*LINK(&res));//add to list to be checked
+				if (lfn.isEmpty() || col.isEmpty())
+					res.setAccessFlags(defPerm);
+				else
+					non_emptylist.append(
+							*LINK(&res)); //add to list to be checked
 #ifdef _DEBUG
-                DBGLOG("Checking RT_COLUMN_SCOPE %s::%s", lfn.str(), col.str());
+				DBGLOG("Checking RT_COLUMN_SCOPE %s::%s", lfn.str(), col.str());
 #endif
-                //Call LDAP to check perms
-                ok = authorizeScope(user, non_emptylist, basedn);
-                if(ok && defPerm != -2)
-                {
-                    ForEachItemIn(x, non_emptylist)
-                    {
-                        ISecResource& res = non_emptylist.item(x);
-                        if(res.getAccessFlags() == -1)
-                            res.setAccessFlags(defPerm);
-                    }
-                }
-                else
-                    break;
-            }
-            return ok;
-        }
+				//Call LDAP to check perms
+				ok = authorizeScope(user, non_emptylist, basedn);
+				if (ok && defPerm != -2) {
+					ForEachItemIn(x, non_emptylist)
+					{
+						ISecResource& res = non_emptylist.item(x);
+						if (res.getAccessFlags() == -1)
+							res.setAccessFlags(defPerm);
+					}
+				} else
+					break;
+			}
+			return ok;
+		}
 //@@end
         else
         {

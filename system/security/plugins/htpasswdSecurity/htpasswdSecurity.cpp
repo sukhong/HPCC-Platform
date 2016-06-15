@@ -152,11 +152,11 @@ protected:
         int nResources = resources->count();
         for (int ri = 0; ri < nResources; ri++)
         {
-            ISecResource* res = resources.queryResource(ri);
+            ISecResource* res = resources->queryResource(ri);
             if(res != nullptr)
             {
                 assertex(res->getResourceType() == RT_COLUMN_SCOPE);
-                res->queryResource(SecAccess_Full);//grant full access to authenticated users
+                res->setAccessFlags(SecAccess_Full);//grant full access to authenticated users
             }
         }
         return true;//success

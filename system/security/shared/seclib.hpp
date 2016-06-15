@@ -70,7 +70,8 @@ enum SecResourceType
     RT_SUDOERS = 5,
     RT_TRIAL = 6,
     RT_COLUMN_SCOPE = 7,
-    RT_SCOPE_MAX = 8
+    RT_VIEW = 8,
+    RT_SCOPE_MAX = 9
 };
 
 

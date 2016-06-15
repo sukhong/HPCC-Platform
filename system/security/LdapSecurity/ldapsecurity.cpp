@@ -604,7 +604,30 @@ bool CLdapSecManager::authenticate(ISecUser* user)
 
         user->setAuthenticateStatus(AS_AUTHENTICATED);
     }
+//@@
+    int x = 0;
+	if (x)
+	{
+		//Create resource list for each Logical File and columns combos
+		Owned<ISecResourceList> resList;
+		resList.setown(createResourceList("ColumnScope"));
 
+		ISecResource* res = resList->addResource("Russ1");
+		res->addParameter("file", "HPCCInternal::wwhitehead::myfile");
+		res->addParameter("column", "DOB");
+		res->setResourceType(RT_COLUMN_SCOPE);
+		LINK(res);
+
+		res = resList->addResource("Russ2");
+		res->addParameter("file", "HPCCInternal::wwhitehead::myfile");
+		res->addParameter("column", "Salary");
+		res->setResourceType(RT_COLUMN_SCOPE);
+		LINK(res);
+
+		bool res2 = authorizeColumnScope(*user, resList.get());
+		PROGLOG("RES = %s", res2 ? "OKAY" : "BAD");
+	}
+//@@
     return ok;
 }
 
