@@ -1375,35 +1375,35 @@ public:
         static bool createdOU = false;
         CriticalBlock block(lcCrit);
         if (!createdOU)
-		{
-			if(m_ldapconfig->getServerType() == OPEN_LDAP)
-			{
-				try
-				{
-					addDC(m_ldapconfig->getBasedn());
-				}
-				catch(...)
-				{
-				}
-				try
-				{
-				addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
-				}
-				catch(...)
-				{
-				}
-			}
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_DEFAULT), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_FILE_SCOPE), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_COLUMN_SCOPE), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_VIEW), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_WORKUNIT_SCOPE), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_SUDOERS), PT_ADMINISTRATORS_ONLY);
+        {
+            if(m_ldapconfig->getServerType() == OPEN_LDAP)
+            {
+                try
+                {
+                    addDC(m_ldapconfig->getBasedn());
+                }
+                catch(...)
+                {
+                }
+                try
+                {
+                addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
+                }
+                catch(...)
+                {
+                }
+            }
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_DEFAULT), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_FILE_SCOPE), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_COLUMN_SCOPE), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_VIEW), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_WORKUNIT_SCOPE), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getResourceBasedn(RT_SUDOERS), PT_ADMINISTRATORS_ONLY);
 
-			createLdapBasedn(NULL, m_ldapconfig->getUserBasedn(), PT_ADMINISTRATORS_ONLY);
-			createLdapBasedn(NULL, m_ldapconfig->getGroupBasedn(), PT_ADMINISTRATORS_ONLY);
-			createdOU = true;
-		}
+            createLdapBasedn(NULL, m_ldapconfig->getUserBasedn(), PT_ADMINISTRATORS_ONLY);
+            createLdapBasedn(NULL, m_ldapconfig->getGroupBasedn(), PT_ADMINISTRATORS_ONLY);
+            createdOU = true;
+        }
     }
 
     virtual LdapServerType getServerType()
@@ -1807,43 +1807,42 @@ public:
 
             return ok;
         }
-//@@begin
-		else if (rtype == RT_COLUMN_SCOPE) {
-			IArrayOf<ISecResource> non_emptylist; //list of permissions to check
-			int defPerm = queryDefaultPermission(user); //default perm to be applied when no lfn or column provided
-			StringAttr lfn;
-			StringAttr col;
-			ForEachItemIn(idx, resources) //Iterate over all resources in list
-			{
-				ISecResource& res = resources.item(idx);
-				assertex(RT_COLUMN_SCOPE == res.getResourceType());
+        else if (rtype == RT_COLUMN_SCOPE)
+        {
+            IArrayOf<ISecResource> non_emptylist; //list of permissions to check
+            int defPerm = queryDefaultPermission(user); //default perm to be applied when no lfn or column provided
+            StringAttr lfn;
+            StringAttr col;
+            ForEachItemIn(idx, resources) //Iterate over all resources in list
+            {
+                ISecResource& res = resources.item(idx);
+                assertex(RT_COLUMN_SCOPE == res.getResourceType());
 
-				lfn.set(res.getParameter("file"));
-				col.set(res.getParameter("column"));
+                lfn.set(res.getParameter("file"));
+                col.set(res.getParameter("column"));
 
-				if (lfn.isEmpty() || col.isEmpty())
-					res.setAccessFlags(defPerm);
-				else
-					non_emptylist.append(
-							*LINK(&res)); //add to list to be checked
+                if (lfn.isEmpty() || col.isEmpty())
+                    res.setAccessFlags(defPerm);
+                else
+                    non_emptylist.append(
+                    *LINK(&res)); //add to list to be checked
 #ifdef _DEBUG
-				DBGLOG("Checking RT_COLUMN_SCOPE %s::%s", lfn.str(), col.str());
+                DBGLOG("Checking RT_COLUMN_SCOPE %s::%s", lfn.str(), col.str());
 #endif
-				//Call LDAP to check perms
-				ok = authorizeScope(user, non_emptylist, basedn);
-				if (ok && defPerm != -2) {
-					ForEachItemIn(x, non_emptylist)
-					{
-						ISecResource& res = non_emptylist.item(x);
-						if (res.getAccessFlags() == -1)
-							res.setAccessFlags(defPerm);
-					}
-				} else
-					break;
-			}
-			return ok;
-		}
-//@@end
+                //Call LDAP to check perms
+                ok = authorizeScope(user, non_emptylist, basedn);
+                if (ok && defPerm != -2) {
+                    ForEachItemIn(x, non_emptylist)
+                    {
+                        ISecResource& res = non_emptylist.item(x);
+                        if (res.getAccessFlags() == -1)
+                            res.setAccessFlags(defPerm);
+                    }
+                } else
+                    break;
+            }
+            return ok;
+        }
         else
         {
             IArrayOf<CSecurityDescriptor> sdlist;
