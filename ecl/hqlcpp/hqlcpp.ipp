@@ -733,7 +733,7 @@ struct HqlCppOptions
     bool                implicitGroupHashDedup;
     bool                reportFieldUsage;
     bool                reportFileUsage;
-    bool                recordFieldUsage; // enables column-level security when turned on
+    bool                recordFieldUsage;
     bool                subsortLocalJoinConditions;
     bool                projectNestedTables;
     bool                showSeqInGraph;

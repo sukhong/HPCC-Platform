@@ -377,19 +377,31 @@ interface IConstWUAssociatedFileIterator : extends IScmIterator
     virtual IConstWUAssociatedFile & query() = 0;
 };
 
-interface IConstWUFieldUsageFile : extends IInterface // Defines a file (dataset or index) that contains used fields from queries
+
+interface IConstWUFieldUsage : extends IInterface // Defines a file (dataset or index) that contains used fields from queries
+{
+    virtual IStringVal & getName(IStringVal & ret) const = 0;
+};
+
+interface IConstWUFieldUsageIterator : extends IScmIterator // Iterates over files that contains used fields
+{
+    virtual IConstWUFieldUsage & query() const = 0;
+};
+
+interface IConstWUFileUsage : extends IInterface // Defines a file (dataset or index) that contains used fields from queries
 {
     virtual IStringVal & getName(IStringVal & ret) const = 0;
     virtual IStringVal & getType(IStringVal & ret) const = 0; // used file type: "dataset" or "index"
     virtual unsigned getNumFields() const = 0;
     virtual unsigned getNumFieldsUsed() const = 0;
-    virtual IPropertyTreeIterator * getFields() const = 0;
+    virtual IConstWUFieldUsageIterator * getFields() const = 0;
 };
 
-interface IConstWUFieldUsageFileIterator : extends IScmIterator // Iterates over files that contains used fields
+interface IConstWUFileUsageIterator : extends IScmIterator // Iterates over files that contains used fields
 {
-    virtual IConstWUFieldUsageFile & query() = 0;
+    virtual IConstWUFileUsage & query() const = 0;
 };
+
 
 interface IConstWUQuery : extends IInterface
 {
@@ -1046,7 +1058,7 @@ interface IConstWorkUnit : extends IConstWorkUnitInfo
     virtual void requestAbort() = 0;
     virtual void subscribe(WUSubscribeOptions options) = 0;
     virtual unsigned queryFileUsage(const char * filename) const = 0;
-    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const = 0;
+    virtual IConstWUFileUsageIterator * getFieldUsage() const = 0;
 
     virtual unsigned getCodeVersion() const = 0;
     virtual unsigned getWuidVersion() const  = 0;

@@ -6149,7 +6149,7 @@ void HqlCppTranslator::generateStatistics(const char * targetDir, const char * v
     else if (options.recordFieldUsage && trackedSources.ordinality()) // to enable column-level security
     {
         Owned<IPropertyTree> sources = gatherFieldUsage(variant, NULL);
-        wu()->noteFieldUsage(sources);
+        wu()->noteFieldUsage(LINK(sources));
     }
 }
 

@@ -86,20 +86,6 @@ public:
     virtual bool matches(const IStatisticsFilter * filter) const;
 };
 
-class CLocalWUFieldUsageFile : public CInterface, implements IConstWUFieldUsageFile
-{
-    Owned<IPropertyTree> p;
-public:
-    IMPLEMENT_IINTERFACE;
-    CLocalWUFieldUsageFile(IPropertyTree& _p) { p.setown(&_p); }
-
-    virtual IStringVal & getName(IStringVal & ret) const { ret.set(p->queryProp("@name")); return ret; }
-    virtual IStringVal & getType(IStringVal & ret) const { ret.set(p->queryName()); return ret; }
-    virtual unsigned getNumFields() const { return p->getPropInt("@numFields"); }
-    virtual unsigned getNumFieldsUsed() const { return p->getPropInt("@numFieldsUsed"); }
-    virtual IPropertyTreeIterator * getFields() const { return p->getElements("field"); }
-};
-
 //==========================================================================================
 
 template <typename T, typename IT> struct CachedTags
@@ -319,7 +305,7 @@ public:
     virtual void copyWorkUnit(IConstWorkUnit *cached, bool all);
     virtual IPropertyTree *queryPTree() const;
     virtual unsigned queryFileUsage(const char *filename) const;
-    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const;
+    virtual IConstWUFileUsageIterator * getFieldUsage() const;
 
     virtual bool getCloneable() const;
     virtual IUserDescriptor * queryUserDescriptor() const;

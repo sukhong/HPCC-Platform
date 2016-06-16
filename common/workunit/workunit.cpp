@@ -1392,7 +1392,7 @@ public:
             { return queryExtendedWU(c)->archiveWorkUnit(base,del,deldll,deleteOwned,exportAssociatedFiles); }
     virtual unsigned queryFileUsage(const char *filename) const
             { return c->queryFileUsage(filename); }
-    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const
+    virtual IConstWUFileUsageIterator * getFieldUsage() const
             { return c->getFieldUsage(); }
     virtual IJlibDateTime & getTimeScheduled(IJlibDateTime &val) const
             { return c->getTimeScheduled(val); }
@@ -1893,19 +1893,59 @@ public:
     IConstWorkUnitInfo & query() { return *cur; }
 };
 
-class CConstWUFieldUsageFileIterator : public CInterface, implements IConstWUFieldUsageFileIterator
+
+class CLocalWUFieldUsage : public CInterface, implements IConstWUFieldUsage
+{
+    Owned<IPropertyTree> p;
+public:
+    IMPLEMENT_IINTERFACE;
+    CLocalWUFieldUsage(IPropertyTree& _p) { p.setown(&_p); }
+
+    virtual IStringVal & getName(IStringVal & ret) const { ret.set(p->queryProp("@name")); return ret; }
+};
+
+class CConstWUFieldUsageIterator : public CInterface, implements IConstWUFieldUsageIterator
 {
 public:
    IMPLEMENT_IINTERFACE;
-   CConstWUFieldUsageFileIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
-   bool                 first() { item.clear(); return iter->first(); }
-   bool                 isValid() { return iter->isValid(); }
-   bool                 next() { item.clear(); return iter->next(); }
-   IConstWUFieldUsageFile & query() { if (!item) item.setown(new CLocalWUFieldUsageFile(iter->get())); return *item; };
+   CConstWUFieldUsageIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
+   bool                  first() override { cur.clear(); return iter->first(); }
+   bool                  isValid() override { return iter->isValid(); }
+   bool                  next() override { cur.clear(); return iter->next(); }
+   IConstWUFieldUsage &  query() const override { if (!cur) cur.setown(new CLocalWUFieldUsage(iter->get())); return *cur; }
 private:
    Owned<IPropertyTreeIterator> iter;
-   mutable Owned<CLocalWUFieldUsageFile> item;
+   mutable Owned<CLocalWUFieldUsage> cur;
 };
+
+class CLocalWUFileUsage : public CInterface, implements IConstWUFileUsage
+{
+    Owned<IPropertyTree> p;
+public:
+    IMPLEMENT_IINTERFACE;
+    CLocalWUFileUsage(IPropertyTree& _p) { p.setown(&_p); }
+
+    virtual IStringVal & getName(IStringVal & ret) const { ret.set(p->queryProp("@name")); return ret; }
+    virtual IStringVal & getType(IStringVal & ret) const { ret.set(p->queryName()); return ret; }
+    virtual unsigned getNumFields() const { return p->getPropInt("@numFields"); }
+    virtual unsigned getNumFieldsUsed() const { return p->getPropInt("@numFieldsUsed"); }
+    virtual IConstWUFieldUsageIterator * getFields() const { return new CConstWUFieldUsageIterator(p->getElements("field")); }
+};
+
+class CConstWUFileUsageIterator : public CInterface, implements IConstWUFileUsageIterator
+{
+public:
+   IMPLEMENT_IINTERFACE;
+   CConstWUFileUsageIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
+   bool                 first() override { cur.clear(); return iter->first(); }
+   bool                 isValid() override { return iter->isValid(); }
+   bool                 next() override { cur.clear(); return iter->next(); }
+   IConstWUFileUsage &  query() const override { if (!cur) cur.setown(new CLocalWUFileUsage(iter->get())); return *cur; }
+private:
+   Owned<IPropertyTreeIterator> iter;
+   mutable Owned<CLocalWUFileUsage> cur;
+};
+
 
 //==========================================================================================
 
@@ -5251,7 +5291,7 @@ void CLocalWorkUnit::copyWorkUnit(IConstWorkUnit *cached, bool all)
         result.setResultStatus(ResultStatusUndefined);
     }
 
-    copyTree(p, fromP, "usedsources"); // field usage info for enforcing column-level security
+    copyTree(p, fromP, "usedsources"); // field usage
 }
 
 bool CLocalWorkUnit::hasDebugValue(const char *propname) const
@@ -6286,7 +6326,7 @@ void CLocalWorkUnit::noteFieldUsage(IPropertyTree * fieldUsage)
     if (fieldUsage)
     {
         CriticalBlock block(crit);
-        p->addPropTree("usedsources", LINK(fieldUsage));
+        p->addPropTree("usedsources", fieldUsage);
     }
 }
 
@@ -6381,10 +6421,10 @@ unsigned CLocalWorkUnit::queryFileUsage(const char *fileName) const
     return p->getPropInt(path.str());
 }
 
-IConstWUFieldUsageFileIterator * CLocalWorkUnit::getFieldUsage() const
+IConstWUFileUsageIterator * CLocalWorkUnit::getFieldUsage() const
 {
     CriticalBlock block(crit);
-    return new CConstWUFieldUsageFileIterator(p->getElements("usedsources/*"));
+    return new CConstWUFileUsageIterator(p->getElements("usedsources/*"));
 }
 
 IPropertyTree *CLocalWorkUnit::getDiskUsageStats()
