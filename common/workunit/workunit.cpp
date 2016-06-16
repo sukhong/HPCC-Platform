@@ -1392,6 +1392,8 @@ public:
             { return queryExtendedWU(c)->archiveWorkUnit(base,del,deldll,deleteOwned,exportAssociatedFiles); }
     virtual unsigned queryFileUsage(const char *filename) const
             { return c->queryFileUsage(filename); }
+    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const
+            { return c->getFieldUsage(); }
     virtual IJlibDateTime & getTimeScheduled(IJlibDateTime &val) const
             { return c->getTimeScheduled(val); }
     virtual unsigned getDebugAgentListenerPort() const
@@ -1530,6 +1532,8 @@ public:
             { c->addFile(fileName, clusters, usageCount, fileKind, graphOwner); }
     virtual void noteFileRead(IDistributedFile *file)
             { c->noteFileRead(file); }
+    virtual void noteFieldUsage(IPropertyTree * usage)
+            { c->noteFieldUsage(usage); }
     virtual void releaseFile(const char *fileName)
             { c->releaseFile(fileName); }
     virtual void resetBeforeGeneration()
@@ -1888,6 +1892,21 @@ public:
     }
     IConstWorkUnitInfo & query() { return *cur; }
 };
+
+class CConstWUFieldUsageFileIterator : public CInterface, implements IConstWUFieldUsageFileIterator
+{
+public:
+   IMPLEMENT_IINTERFACE;
+   CConstWUFieldUsageFileIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
+   bool                 first() { item.clear(); return iter->first(); }
+   bool                 isValid() { return iter->isValid(); }
+   bool                 next() { item.clear(); return iter->next(); }
+   IConstWUFieldUsageFile & query() { if (!item) item.setown(new CLocalWUFieldUsageFile(iter->get())); return *item; };
+private:
+   Owned<IPropertyTreeIterator> iter;
+   mutable Owned<CLocalWUFieldUsageFile> item;
+};
+
 //==========================================================================================
 
 class CStringArrayIterator : public CInterface, implements IStringIterator
@@ -5231,6 +5250,8 @@ void CLocalWorkUnit::copyWorkUnit(IConstWorkUnit *cached, bool all)
         CLocalWUResult result(LINK(&results->query()));
         result.setResultStatus(ResultStatusUndefined);
     }
+
+    copyTree(p, fromP, "usedsources"); // field usage info for enforcing column-level security
 }
 
 bool CLocalWorkUnit::hasDebugValue(const char *propname) const
@@ -6260,6 +6281,15 @@ void CLocalWorkUnit::noteFileRead(IDistributedFile *file)
     }
 }
 
+void CLocalWorkUnit::noteFieldUsage(IPropertyTree * fieldUsage)
+{
+    if (fieldUsage)
+    {
+        CriticalBlock block(crit);
+        p->addPropTree("usedsources", LINK(fieldUsage));
+    }
+}
+
 void CLocalWorkUnit::_loadFilesWritten() const
 {
     // Nothing to do
@@ -6349,6 +6379,12 @@ unsigned CLocalWorkUnit::queryFileUsage(const char *fileName) const
     path.append(fileName).append("\"]/@usageCount");
     CriticalBlock block(crit);
     return p->getPropInt(path.str());
+}
+
+IConstWUFieldUsageFileIterator * CLocalWorkUnit::getFieldUsage() const
+{
+    CriticalBlock block(crit);
+    return new CConstWUFieldUsageFileIterator(p->getElements("usedsources/*"));
 }
 
 IPropertyTree *CLocalWorkUnit::getDiskUsageStats()

@@ -377,8 +377,19 @@ interface IConstWUAssociatedFileIterator : extends IScmIterator
     virtual IConstWUAssociatedFile & query() = 0;
 };
 
+interface IConstWUFieldUsageFile : extends IInterface // Defines a file (dataset or index) that contains used fields from queries
+{
+    virtual IStringVal & getName(IStringVal & ret) const = 0;
+    virtual IStringVal & getType(IStringVal & ret) const = 0; // used file type: "dataset" or "index"
+    virtual unsigned getNumFields() const = 0;
+    virtual unsigned getNumFieldsUsed() const = 0;
+    virtual IPropertyTreeIterator * getFields() const = 0;
+};
 
-
+interface IConstWUFieldUsageFileIterator : extends IScmIterator // Iterates over files that contains used fields
+{
+    virtual IConstWUFieldUsageFile & query() = 0;
+};
 
 interface IConstWUQuery : extends IInterface
 {
@@ -1035,6 +1046,8 @@ interface IConstWorkUnit : extends IConstWorkUnitInfo
     virtual void requestAbort() = 0;
     virtual void subscribe(WUSubscribeOptions options) = 0;
     virtual unsigned queryFileUsage(const char * filename) const = 0;
+    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const = 0;
+
     virtual unsigned getCodeVersion() const = 0;
     virtual unsigned getWuidVersion() const  = 0;
     virtual void getBuildVersion(IStringVal & buildVersion, IStringVal & eclVersion) const = 0;
@@ -1139,6 +1152,7 @@ interface IWorkUnit : extends IConstWorkUnit
     virtual void setIsClone(bool value) = 0;
     virtual void setTimeScheduled(const IJlibDateTime & val) = 0;
     virtual void noteFileRead(IDistributedFile * file) = 0;
+    virtual void noteFieldUsage(IPropertyTree * file) = 0;
     virtual void resetBeforeGeneration() = 0;
     virtual bool switchThorQueue(const char * newcluster, IQueueSwitcher * qs) = 0;
     virtual void setAllowedClusters(const char * value) = 0;

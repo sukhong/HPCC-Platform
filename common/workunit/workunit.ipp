@@ -38,7 +38,6 @@ public:
     virtual const char *queryValue() const;
 };
 
-
 class CLocalWUStatistic : public CInterface, implements IConstWUStatistic
 {
     Owned<IPropertyTree> p;
@@ -85,6 +84,20 @@ public:
     virtual unsigned __int64 getTimestamp() const;
 
     virtual bool matches(const IStatisticsFilter * filter) const;
+};
+
+class CLocalWUFieldUsageFile : public CInterface, implements IConstWUFieldUsageFile
+{
+    Owned<IPropertyTree> p;
+public:
+    IMPLEMENT_IINTERFACE;
+    CLocalWUFieldUsageFile(IPropertyTree& _p) { p.setown(&_p); }
+
+    virtual IStringVal & getName(IStringVal & ret) const { ret.set(p->queryProp("@name")); return ret; }
+    virtual IStringVal & getType(IStringVal & ret) const { ret.set(p->queryName()); return ret; }
+    virtual unsigned getNumFields() const { return p->getPropInt("@numFields"); }
+    virtual unsigned getNumFieldsUsed() const { return p->getPropInt("@numFieldsUsed"); }
+    virtual IPropertyTreeIterator * getFields() const { return p->getElements("field"); }
 };
 
 //==========================================================================================
@@ -306,6 +319,8 @@ public:
     virtual void copyWorkUnit(IConstWorkUnit *cached, bool all);
     virtual IPropertyTree *queryPTree() const;
     virtual unsigned queryFileUsage(const char *filename) const;
+    virtual IConstWUFieldUsageFileIterator * getFieldUsage() const;
+
     virtual bool getCloneable() const;
     virtual IUserDescriptor * queryUserDescriptor() const;
     virtual unsigned getCodeVersion() const;
@@ -382,6 +397,7 @@ public:
     virtual IWUResult * updateVariableByName(const char * name);
     void addFile(const char *fileName, StringArray *clusters, unsigned usageCount, WUFileKind fileKind, const char *graphOwner);
     void noteFileRead(IDistributedFile *file);
+    void noteFieldUsage(IPropertyTree * usage);
     void releaseFile(const char *fileName);
     void resetBeforeGeneration();
     void deleteTempFiles(const char *graph, bool deleteOwned, bool deleteJobOwned);
