@@ -1909,13 +1909,12 @@ class CConstWUFieldUsageIterator : public CInterface, implements IConstWUFieldUs
 public:
    IMPLEMENT_IINTERFACE;
    CConstWUFieldUsageIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
-   bool                  first() override { cur.clear(); return iter->first(); }
+   bool                  first() override { return iter->first(); }
    bool                  isValid() override { return iter->isValid(); }
-   bool                  next() override { cur.clear(); return iter->next(); }
-   IConstWUFieldUsage &  query() const override { if (!cur) cur.setown(new CLocalWUFieldUsage(iter->get())); return *cur; }
+   bool                  next() override { return iter->next(); }
+   IConstWUFieldUsage *  get() const override { return new CLocalWUFieldUsage(iter->get()); }
 private:
    Owned<IPropertyTreeIterator> iter;
-   mutable Owned<CLocalWUFieldUsage> cur;
 };
 
 class CLocalWUFileUsage : public CInterface, implements IConstWUFileUsage
@@ -1937,13 +1936,12 @@ class CConstWUFileUsageIterator : public CInterface, implements IConstWUFileUsag
 public:
    IMPLEMENT_IINTERFACE;
    CConstWUFileUsageIterator(IPropertyTreeIterator * tree) { iter.setown(tree); }
-   bool                 first() override { cur.clear(); return iter->first(); }
+   bool                 first() override { return iter->first(); }
    bool                 isValid() override { return iter->isValid(); }
-   bool                 next() override { cur.clear(); return iter->next(); }
-   IConstWUFileUsage &  query() const override { if (!cur) cur.setown(new CLocalWUFileUsage(iter->get())); return *cur; }
+   bool                 next() override { return iter->next(); }
+   IConstWUFileUsage *  get() const override { return new CLocalWUFileUsage(iter->get()); }
 private:
    Owned<IPropertyTreeIterator> iter;
-   mutable Owned<CLocalWUFileUsage> cur;
 };
 
 

@@ -385,7 +385,7 @@ interface IConstWUFieldUsage : extends IInterface // Defines a file (dataset or 
 
 interface IConstWUFieldUsageIterator : extends IScmIterator // Iterates over files that contains used fields
 {
-    virtual IConstWUFieldUsage & query() const = 0;
+    virtual IConstWUFieldUsage * get() const = 0;
 };
 
 interface IConstWUFileUsage : extends IInterface // Defines a file (dataset or index) that contains used fields from queries
@@ -399,7 +399,7 @@ interface IConstWUFileUsage : extends IInterface // Defines a file (dataset or i
 
 interface IConstWUFileUsageIterator : extends IScmIterator // Iterates over files that contains used fields
 {
-    virtual IConstWUFileUsage & query() const = 0;
+    virtual IConstWUFileUsage * get() const = 0;
 };
 
 
