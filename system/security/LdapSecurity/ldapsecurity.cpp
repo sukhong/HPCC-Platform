@@ -612,19 +612,20 @@ bool CLdapSecManager::authenticate(ISecUser* user)
         Owned<ISecResourceList> resList;
         resList.setown(createResourceList("ColumnScope"));
 
-        ISecResource* res = resList->addResource("Russ1");
+        ISecResource* res = resList->addResource("HPCCInternal::wwhitehead::myfile::DOB");
         res->addParameter("file", "HPCCInternal::wwhitehead::myfile");
         res->addParameter("column", "DOB");
-        res->setResourceType(RT_COLUMN_SCOPE);
+        res->setResourceType(RT_VIEW_SCOPE);
         LINK(res);
 
-        res = resList->addResource("Russ2");
+        res = resList->addResource("HPCCInternal::wwhitehead::myfile::Salary");
         res->addParameter("file", "HPCCInternal::wwhitehead::myfile");
         res->addParameter("column", "Salary");
-        res->setResourceType(RT_COLUMN_SCOPE);
+        res->setResourceType(RT_VIEW_SCOPE);
         LINK(res);
 
-        bool res2 = authorizeColumnScope(*user, resList.get());
+        bool x = addResources(*user, resList.get());
+        bool res2 = authorizeViewScope(*user, resList.get());
         PROGLOG("RES = %s", res2 ? "OKAY" : "BAD");
     }
 //@@END TEST CODE
@@ -903,12 +904,12 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
         res->setResourceType(RT_COLUMN_SCOPE);
     }
 */
-bool CLdapSecManager::authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
+bool CLdapSecManager::authorizeViewScope(ISecUser & user, ISecResourceList * resources)
 {
     CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
     if(!reslist)
         return true;
-    return m_ldap_client->authorize(RT_COLUMN_SCOPE, user, reslist->getResourceList());
+    return m_ldap_client->authorize(RT_VIEW_SCOPE, user, reslist->getResourceList());
 }
 
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)

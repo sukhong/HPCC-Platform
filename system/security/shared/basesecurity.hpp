@@ -106,7 +106,7 @@ public:
         return false;
     }
 
-    bool authorizeColumnScope(ISecUser & user, ISecResourceList * resources)
+    bool authorizeViewScope(ISecUser & user, ISecResourceList * resources)
     {
         UNIMPLEMENTED;
         return false;
