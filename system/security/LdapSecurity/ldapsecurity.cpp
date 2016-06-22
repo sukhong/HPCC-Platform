@@ -1361,49 +1361,49 @@ bool CLdapSecManager::authenticateUser(ISecUser & user, bool &superUser)
 }
 
 //Data View related interfaces
-bool CLdapSecManager::createView(const char* viewName, const char * viewDescription)
+void CLdapSecManager::createView(const char* viewName, const char * viewDescription)
 {
-    return m_ldap_client->createView(viewName, viewDescription);
+    m_ldap_client->createView(viewName, viewDescription);
 }
 
-bool CLdapSecManager::deleteView(const char* viewName)
+void CLdapSecManager::deleteView(const char* viewName)
 {
-    return m_ldap_client->deleteView(viewName);
+    m_ldap_client->deleteView(viewName);
 }
 
-bool CLdapSecManager::queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
+void CLdapSecManager::queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
 {
-    return m_ldap_client->queryAllViews(viewNames, viewDescriptions);
+    m_ldap_client->queryAllViews(viewNames, viewDescriptions);
 }
 
-bool CLdapSecManager::addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+void CLdapSecManager::addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
 {
-    return m_ldap_client->addViewColumns(viewName, files, columns);
+    m_ldap_client->addViewColumns(viewName, files, columns);
 }
 
-bool CLdapSecManager::removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+void CLdapSecManager::removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
 {
-    return m_ldap_client->removeViewColumns(viewName, files, columns);
+    m_ldap_client->removeViewColumns(viewName, files, columns);
 }
 
-bool CLdapSecManager::queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+void CLdapSecManager::queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
 {
-    return m_ldap_client->queryViewColumns(viewName, files, columns);
+    m_ldap_client->queryViewColumns(viewName, files, columns);
 }
 
-bool CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers)
 {
-    return m_ldap_client->addViewMembers(viewName, viewUsers);
+    m_ldap_client->addViewMembers(viewName, viewUsers);
 }
 
-bool CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers)
 {
-    return m_ldap_client->removeViewMembers(viewName, viewUsers);
+    m_ldap_client->removeViewMembers(viewName, viewUsers);
 }
 
-bool CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers)
 {
-    return m_ldap_client->queryViewMembers(viewName, viewUsers);
+    m_ldap_client->queryViewMembers(viewName, viewUsers);
 }
 
 extern "C"

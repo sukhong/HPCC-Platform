@@ -560,6 +560,11 @@ public:
         return m_group_basedn.str();
     }
 
+    virtual const char* getViewBasedn()
+    {
+        return m_view_basedn.str();
+    }
+
     virtual const char* getResourceBasedn(SecResourceType rtype)
     {
         if(rtype == RT_DEFAULT || rtype == RT_MODULE || rtype == RT_SERVICE)
@@ -5834,49 +5839,47 @@ private:
 
 //@@
     //Data View related interfaces
-    bool createView(const char* viewName, const char * viewDescription)
+    virtual void createView(const char * viewName, const char * viewDescription)
     {
-        return false;
+        if(viewName == NULL || *viewName == '\0')
+            throw MakeStringException(-1, "Can't add view, viewname is empty");
+
+        addGroup(viewName, NULL, viewDescription, m_ldapconfig->getViewBasedn());
     }
 
-    bool deleteView(const char* viewName)
+    void deleteView(const char * viewName)
     {
-        return false;
+        if(viewName == NULL || *viewName == '\0')
+            throw MakeStringException(-1, "Can't delete view, viewname is empty");
+        deleteGroup(viewName);
     }
 
-    bool queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
+    void queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
     {
-        return false;
     }
 
-    bool addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    void addViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        return false;
     }
 
-    bool removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        return false;
     }
 
-    bool queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        return false;
     }
 
-    bool addViewMembers(const char* viewName, StringArray & viewUsers)
+    void addViewMembers(const char * viewName, StringArray & viewUsers)
     {
-        return false;
     }
 
-    bool removeViewMembers(const char* viewName, StringArray & viewUsers)
+    void removeViewMembers(const char * viewName, StringArray & viewUsers)
     {
-        return false;
     }
 
-    bool queryViewMembers(const char* viewName, StringArray & viewUsers)
+    void queryViewMembers(const char * viewName, StringArray & viewUsers)
     {
-        return false;
     }
 };
 

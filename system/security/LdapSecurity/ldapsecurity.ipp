@@ -450,19 +450,19 @@ public:
     virtual bool authenticateUser(ISecUser & user, bool &superUser);
     virtual secManagerType querySecMgrType() { return SMT_LDAP; }
     inline virtual const char* querySecMgrTypeName() { return "LdapSecurity"; }
-//@@
+
     //Data View related interfaces
-    virtual bool createView(const char* viewName, const char * viewDescription);
-    virtual bool deleteView(const char* viewName);
-    virtual bool queryAllViews(StringArray & viewNames, StringArray & viewDescriptions);
+    virtual void createView(const char * viewName, const char * viewDescription);
+    virtual void deleteView(const char * viewName);
+    virtual void queryAllViews(StringArray & viewNames, StringArray & viewDescriptions);
 
-    virtual bool addViewColumns(const char* viewName, StringArray & files, StringArray & columns);
-    virtual bool removeViewColumns(const char* viewName, StringArray & files, StringArray & columns);
-    virtual bool queryViewColumns(const char* viewName, StringArray & files, StringArray & columns);
+    virtual void addViewColumns(const char * viewName, StringArray & files, StringArray & columns);
+    virtual void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns);
+    virtual void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns);
 
-    virtual bool addViewMembers(const char* viewName, StringArray & viewUsers);
-    virtual bool removeViewMembers(const char* viewName, StringArray & viewUsers);
-    virtual bool queryViewMembers(const char* viewName, StringArray & viewUsers);
+    virtual void addViewMembers(const char * viewName, StringArray & viewUsers);
+    virtual void removeViewMembers(const char * viewName, StringArray & viewUsers);
+    virtual void queryViewMembers(const char * viewName, StringArray & viewUsers);
 };
 
 #endif
