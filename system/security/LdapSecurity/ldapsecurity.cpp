@@ -1363,7 +1363,7 @@ bool CLdapSecManager::authenticateUser(ISecUser & user, bool &superUser)
 //Data View related interfaces
 bool CLdapSecManager::createView(const char* viewName, const char * viewDescription)
 {
-    return m_ldap_client->createView(viewName, const char * viewDescription);
+    return m_ldap_client->createView(viewName, viewDescription);
 }
 
 bool CLdapSecManager::deleteView(const char* viewName)
@@ -1378,7 +1378,7 @@ bool CLdapSecManager::queryAllViews(StringArray & viewNames, StringArray & viewD
 
 bool CLdapSecManager::addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
 {
-    return m_ldap_client->addViewColumns(viewName, files, columns));
+    return m_ldap_client->addViewColumns(viewName, files, columns);
 }
 
 bool CLdapSecManager::removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
