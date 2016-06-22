@@ -450,6 +450,19 @@ public:
     virtual bool authenticateUser(ISecUser & user, bool &superUser);
     virtual secManagerType querySecMgrType() { return SMT_LDAP; }
     inline virtual const char* querySecMgrTypeName() { return "LdapSecurity"; }
+//@@
+    //Data View related interfaces
+    virtual bool createView(const char* viewName, const char * viewDescription);
+    virtual bool deleteView(const char* viewName);
+    virtual bool queryAllViews(StringArray & viewNames, StringArray & viewDescriptions);
+
+    virtual bool addViewColumns(const char* viewName, StringArray & files, StringArray & columns);
+    virtual bool removeViewColumns(const char* viewName, StringArray & files, StringArray & columns);
+    virtual bool queryViewColumns(const char* viewName, StringArray & files, StringArray & columns);
+
+    virtual bool addViewMembers(const char* viewName, StringArray & viewUsers);
+    virtual bool removeViewMembers(const char* viewName, StringArray & viewUsers);
+    virtual bool queryViewMembers(const char* viewName, StringArray & viewUsers);
 };
 
 #endif

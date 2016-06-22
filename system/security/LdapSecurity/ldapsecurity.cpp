@@ -906,10 +906,11 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
 */
 bool CLdapSecManager::authorizeViewScope(ISecUser & user, ISecResourceList * resources)
 {
-    CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
-    if(!reslist)
-        return true;
-    return m_ldap_client->authorize(RT_VIEW_SCOPE, user, reslist->getResourceList());
+    //CLdapSecResourceList * reslist = (CLdapSecResourceList*)resources;
+    //if(!reslist)
+    //    return true;
+    //return m_ldap_client->authorize(RT_VIEW_SCOPE, user, reslist->getResourceList());
+    return authorizeEx(RT_VIEW_SCOPE, user, resources);
 }
 
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)
@@ -1360,6 +1361,44 @@ bool CLdapSecManager::authenticateUser(ISecUser & user, bool &superUser)
     if (!authenticate(&user))
         return false;
     superUser = isSuperUser(&user);
+    return true;
+}
+//@@
+    //Data View related interfaces
+bool CLdapSecManager::createView(const char* viewName, const char * viewDescription)
+{
+    return true;
+}
+bool CLdapSecManager::deleteView(const char* viewName)
+{
+    return true;
+}
+bool CLdapSecManager::queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
+{
+    return true;
+}
+bool CLdapSecManager::addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    return true;
+}
+bool CLdapSecManager::removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    return true;
+}
+bool CLdapSecManager::queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    return true;
+}
+bool CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers)
+{
+    return true;
+}
+bool CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers)
+{
+    return true;
+}
+bool CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers)
+{
     return true;
 }
 
