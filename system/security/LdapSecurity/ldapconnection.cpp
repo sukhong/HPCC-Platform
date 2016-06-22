@@ -5831,6 +5831,53 @@ private:
         else
             return -2;
     }
+
+//@@
+    //Data View related interfaces
+    bool createView(const char* viewName, const char * viewDescription)
+    {
+        return false;
+    }
+
+    bool deleteView(const char* viewName)
+    {
+        return false;
+    }
+
+    bool queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
+    {
+        return false;
+    }
+
+    bool addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    {
+        return false;
+    }
+
+    bool removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    {
+        return false;
+    }
+
+    bool queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+    {
+        return false;
+    }
+
+    bool addViewMembers(const char* viewName, StringArray & viewUsers)
+    {
+        return false;
+    }
+
+    bool removeViewMembers(const char* viewName, StringArray & viewUsers)
+    {
+        return false;
+    }
+
+    bool queryViewMembers(const char* viewName, StringArray & viewUsers)
+    {
+        return false;
+    }
 };
 
 #ifdef _WIN32
