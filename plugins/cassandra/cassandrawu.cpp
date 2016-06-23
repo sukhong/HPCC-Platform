@@ -2096,9 +2096,9 @@ static void lockWuid(Owned<IRemoteConnection> &connection, const char *wuid)
 {
     VStringBuffer wuRoot("/WorkUnitLocks/%s", wuid);
     if (connection)
-        connection->changeMode(RTM_LOCK_WRITE|RTM_CREATE_QUERY, SDS_LOCK_TIMEOUT); // Would it ever be anything else?
+        connection->changeMode(RTM_LOCK_WRITE,SDS_LOCK_TIMEOUT); // Would it ever be anything else?
     else
-        connection.setown(querySDS().connect(wuRoot.str(), myProcessSession(), RTM_LOCK_WRITE|RTM_CREATE_QUERY, SDS_LOCK_TIMEOUT));
+        connection.setown(querySDS().connect(wuRoot.str(), myProcessSession(), RTM_LOCK_WRITE, SDS_LOCK_TIMEOUT));
     if (!connection)
         throw makeStringExceptionV(WUERR_LockFailed, "Failed to get connection for xpath %s", wuRoot.str());
 }
