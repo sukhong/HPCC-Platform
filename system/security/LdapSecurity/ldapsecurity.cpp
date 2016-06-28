@@ -1391,19 +1391,19 @@ void CLdapSecManager::queryViewColumns(const char* viewName, StringArray & files
     m_ldap_client->queryViewColumns(viewName, files, columns);
 }
 
-void CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
 {
-    m_ldap_client->addViewMembers(viewName, viewUsers);
+    m_ldap_client->addViewMembers(viewName, viewUsers, viewGroups);
 }
 
-void CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
 {
-    m_ldap_client->removeViewMembers(viewName, viewUsers);
+    m_ldap_client->removeViewMembers(viewName, viewUsers, viewGroups);
 }
 
-void CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers)
+void CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
 {
-    m_ldap_client->queryViewMembers(viewName, viewUsers);
+    m_ldap_client->queryViewMembers(viewName, viewUsers, viewGroups);
 }
 
 extern "C"

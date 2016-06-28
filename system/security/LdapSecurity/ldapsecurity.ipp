@@ -460,9 +460,9 @@ public:
     virtual void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns);
     virtual void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns);
 
-    virtual void addViewMembers(const char * viewName, StringArray & viewUsers);
-    virtual void removeViewMembers(const char * viewName, StringArray & viewUsers);
-    virtual void queryViewMembers(const char * viewName, StringArray & viewUsers);
+    virtual void addViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups);
+    virtual void removeViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups);
+    virtual void queryViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups);
 };
 
 #endif

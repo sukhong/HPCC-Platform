@@ -297,9 +297,9 @@ interface ILdapClient : extends IInterface
     virtual void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns) = 0;
     virtual void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns) = 0;
 
-    virtual void addViewMembers(const char * viewName, StringArray & viewUsers) = 0;
-    virtual void removeViewMembers(const char * viewName, StringArray & viewUsers) = 0;
-    virtual void queryViewMembers(const char * viewName, StringArray & viewUsers) = 0;
+    virtual void addViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups) = 0;
+    virtual void removeViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups) = 0;
+    virtual void queryViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups) = 0;
 };
 
 ILdapClient* createLdapClient(IPropertyTree* cfg);

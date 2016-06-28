@@ -1380,7 +1380,7 @@ public:
                 }
                 try
                 {
-                addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
+                    addGroup("Directory Administrators", NULL, NULL, m_ldapconfig->getBasedn());
                 }
                 catch(...)
                 {
@@ -5839,12 +5839,20 @@ private:
 
 //@@
     //Data View related interfaces
-    virtual void createView(const char * viewName, const char * viewDescription)
+    void createView(const char * viewName, const char * viewDescription)
     {
         if(viewName == NULL || *viewName == '\0')
             throw MakeStringException(-1, "Can't add view, viewname is empty");
 
+        if (stricmp(groupname, "Administrators") == 0 ||
+            stricmp(groupname, "Authenticated Users") == 0 ||
+            stricmp(groupname, "Directory Administrators") == 0)
+        {
+            throw MakeStringException(-1, "Can't add view, '%s' is a reserved name", viewName);
+        }
+
         addGroup(viewName, NULL, viewDescription, m_ldapconfig->getViewBasedn());
+        //TODO where to save lfn/column info?  Cassandra?  Nowhere in LDAP for it....
     }
 
     void deleteView(const char * viewName)
@@ -5852,34 +5860,72 @@ private:
         if(viewName == NULL || *viewName == '\0')
             throw MakeStringException(-1, "Can't delete view, viewname is empty");
         deleteGroup(viewName);
+        //TODO delete lfn/column mappings
     }
 
     void queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
     {
+        StringArray names;
+        StringArray managedBy;
+        StringArray desc;
+        getAllGroups(names, managedBy, desc);
+
+        unsigned len = names.ordinality();
+        for(unsigned idx = 0; idx < len; idx++)
+        {
+            const char * pName = names.item(idx);
+            if (stricmp(pName, "Administrators") != 0 &&
+                stricmp(pName, "Authenticated Users") != 0 &&
+                stricmp(pName, "Directory Administrators") != 0)
+            {
+                viewNames.append(pName);
+                viewDescriptions.append(desc.item(idx));
+            }
+        }
     }
 
     void addViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
+        //TODO
     }
 
     void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
+        //TODO
     }
 
     void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
+        //TODO
     }
 
-    void addViewMembers(const char * viewName, StringArray & viewUsers)
+    void addViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
     {
+        unsigned len = viewUsers.ordinality();
+        for (unsigned idx = 0; idx < len; idx++)
+        {
+            //TODO probably need to build user DN string instead of just user name
+            changeUserGroup("add", m_ldapconfig->getViewBasedn(), viewUsers.item(idx));
+        }
+        //TODO handle groups
+
     }
 
-    void removeViewMembers(const char * viewName, StringArray & viewUsers)
+    void removeViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
     {
+        unsigned len = viewUsers.ordinality();
+        for (unsigned idx = 0; idx < len; idx++)
+        {
+            //TODO probably need to build user DN string instead of just user name
+            changeUserGroup("delete", m_ldapconfig->getViewBasedn(), viewUsers.item(idx));
+        }
+        //TODO handle groups
     }
 
-    void queryViewMembers(const char * viewName, StringArray & viewUsers)
+    void queryViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
     {
+        getGroupMembers(viewName, viewUsers);
+        //TODO get group members
     }
 };
 
