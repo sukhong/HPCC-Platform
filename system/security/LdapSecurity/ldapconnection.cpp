@@ -5844,9 +5844,9 @@ private:
         if(viewName == NULL || *viewName == '\0')
             throw MakeStringException(-1, "Can't add view, viewname is empty");
 
-        if (stricmp(groupname, "Administrators") == 0 ||
-            stricmp(groupname, "Authenticated Users") == 0 ||
-            stricmp(groupname, "Directory Administrators") == 0)
+        if (stricmp(viewName, "Administrators") == 0 ||
+            stricmp(viewName, "Authenticated Users") == 0 ||
+            stricmp(viewName, "Directory Administrators") == 0)
         {
             throw MakeStringException(-1, "Can't add view, '%s' is a reserved name", viewName);
         }
