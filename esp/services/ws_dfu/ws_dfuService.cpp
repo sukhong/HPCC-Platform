@@ -301,6 +301,39 @@ void parseTwoStringArrays(const char *input, StringArray& strarray1, StringArray
     return;
 }
 
+bool CWsDfuEx::onDFUColumnsQuery(IEspContext &context, IEspDFUColumnsQueryRequest & req, IEspDFUColumnsQueryResponse & resp)
+{
+    try
+    {
+        if (!context.validateFeatureAccess(FEATURE_URL, SecAccess_Read, false))
+            throw MakeStringException(ECLWATCH_DFU_ACCESS_DENIED, "Failed to Browse Logical Files. Permission denied.");
+
+        StringBuffer username;
+        context.getUserID(username);
+
+        Owned<IUserDescriptor> userdesc;
+        if(username.length() > 0)
+        {
+            const char* passwd = context.queryPassword();
+            userdesc.setown(createUserDescriptor());
+            userdesc->set(username.str(), passwd);
+        }
+
+        if (req.getIncludeIndexes())
+        {
+
+        }
+
+        //doLogicalFileSearch(context, userdesc.get(), req, resp);
+    }
+    catch(IException* e)
+    {   
+        FORWARDEXCEPTION(context, e,  ECLWATCH_INTERNAL_ERROR);
+    }
+
+    return true;
+}
+
 bool CWsDfuEx::onDFUQuery(IEspContext &context, IEspDFUQueryRequest & req, IEspDFUQueryResponse & resp)
 {
     try

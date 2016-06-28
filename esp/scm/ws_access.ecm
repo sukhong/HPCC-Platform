@@ -572,6 +572,131 @@ ESPresponse ResourcePermissionsResponse
     ESParray<ESPstruct ResourcePermission, Permission> Permissions;
 };
 
+/* @@@@@ VIEWS PERMISSIONS */
+ESPstruct View
+{
+    string name;
+    string description;
+};
+
+ESPrequest QueryViewsRequest
+{
+};
+
+ESPresponse QueryViewsResponse
+{
+   ESParray<ESPstruct View> views; 
+};
+
+ESPrequest AddViewRequest
+{
+    string name;
+    string description;
+};
+
+ESPresponse AddViewResponse
+{
+};
+
+ESPrequest DeleteViewRequest
+{
+    string name;
+};
+
+Espresponse DeleteViewResponse
+{
+};
+
+ESPenum LogicalFileType : string
+{
+    File("File"),
+    Index("Index"),
+};
+
+ESPstruct ViewColumn
+{
+    string filename;
+    ESPenum LogicalFileType filetype;
+    bool   isSuperfile;
+    string columname;    
+};
+
+ESPrequest QueryViewColumnsRequest
+{
+    string viewname;
+};
+
+ESPresponse QueryViewColumnsResponse
+{
+    string viewname;
+    ESParray<ESPstruct ViewColumn> viewcolumns;    
+};
+
+ESPrequest AddViewColumnRequest
+{
+    string viewname;
+    string filename;
+    string columnname;   
+};
+
+ESPresponse AddViewColumnResponse
+{
+};
+
+ESPrequest DeleteViewColumnRequest
+{
+    string viewname;
+    string filename;
+    string columnname;
+};
+
+ESPresponse DeleteViewColumnResponse
+{
+};
+
+ESPenum ViewMemberType : string
+{
+    User("User"),
+    Group("Group"),
+};
+
+ESPstruct ViewMember
+{
+    string name;
+    ESPenum ViewMemberType membertype;
+};
+
+ESPrequest QueryViewMembersRequest
+{
+    string viewname;
+};
+
+ESPresponse QueryViewMembersResponse
+{
+    ESParray<ESPstruct ViewMember> viewmembers;
+};
+
+ESPrequest AddViewMemberRequest
+{
+    string name;
+    ESPenum ViewMemberType membertype;
+};
+
+ESPresponse AddViewMemberResponse
+{
+};
+
+ESPrequest DeleteViewMemberRequest
+{
+    string name;
+    ESPenum ViewMemberType membertype;
+};
+
+ESPresponse DeleteViewMemberResponse
+{
+};
+
+
 ESPrequest PermissionAddRequest
 {
     string basedn;
@@ -788,7 +913,7 @@ ESPresponse [nil_remove] UserAccountExportResponse
 };
 
 
-ESPservice [version("1.09"), exceptions_inline("./smc_xslt/exceptions.xslt")] ws_access
+ESPservice [version("1.10"), exceptions_inline("./smc_xslt/exceptions.xslt")] ws_access
 {
     ESPmethod [client_xslt("/esp/xslt/access_users.xslt")] Users(UserRequest, UserResponse);
     ESPmethod [client_xslt("/esp/xslt/access_useredit.xslt")] UserEdit(UserEditRequest, UserEditResponse);
@@ -815,6 +940,18 @@ ESPservice [version("1.09"), exceptions_inline("./smc_xslt/exceptions.xslt")] ws
     ESPmethod [client_xslt("/esp/xslt/access_resourceadd.xslt")] ResourceAdd(ResourceAddRequest, ResourceAddResponse);
     ESPmethod [client_xslt("/esp/xslt/access_resourcedelete.xslt")] ResourceDelete(ResourceDeleteRequest, ResourceDeleteResponse);
     ESPmethod [client_xslt("/esp/xslt/access_resourceaddinput.xslt")] ResourceAddInput(ResourceAddInputRequest, ResourceAddInputResponse);
+
+    /* @@@ VIEWS */
+    ESPmethod [min_ver("1.10")] QueryViews(QueryViewsRequest, QueryViewsResponse); 
+    ESPmethod [min_ver("1.10")] AddView(AddViewRequest, AddViewResponse); 
+    ESPmethod [min_ver("1.10")] DeleteView(DeleteViewRequest, DeleteViewResponse); 
+    ESPmethod [min_ver("1.10")] QueryViewColumns(QueryViewColumnsRequest, QueryViewColumnsResponse); 
+    ESPmethod [min_ver("1.10")] AddViewColumn(AddViewColumnRequest, AddViewColumnResponse); 
+    ESPmethod [min_ver("1.10")] DeleteViewColumn(DeleteViewColumnRequest, DeleteViewColumnResponse); 
+    ESPmethod [min_ver("1.10")] QueryViewMembers(QueryViewMembersRequest, QueryViewMembersResponse); 
+    ESPmethod [min_ver("1.10")] AddViewMember(AddViewMemberRequest, AddViewMemberResponse); 
+    ESPmethod [min_ver("1.10")] DeleteViewMember(DeleteViewMemberRequest, DeleteViewMemberResponse); 
+
     ESPmethod [client_xslt("/esp/xslt/access_permissions.xslt")] ResourcePermissions(ResourcePermissionsRequest, ResourcePermissionsResponse);
     ESPmethod [client_xslt("/esp/xslt/access_permissionaddinput.xslt")] PermissionAddInput(PermissionAddRequest, PermissionAddResponse);
     ESPmethod [client_xslt("/esp/xslt/access_permissionchange.xslt")] PermissionAction(PermissionActionRequest, PermissionActionResponse);

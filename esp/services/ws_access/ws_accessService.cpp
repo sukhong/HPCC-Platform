@@ -2162,6 +2162,51 @@ bool Cws_accessEx::onResourcePermissions(IEspContext &context, IEspResourcePermi
 
     return true;
 }
+    
+bool Cws_accessEx::onQueryViews(IEspContext &context, IEspQueryViewsRequest &req, IEspQueryViewsResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onAddView(IEspContext &context, IEspAddViewRequest &req, IEspAddViewResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onDeleteView(IEspContext &context, IEspDeleteViewRequest &req, IEspDeleteViewResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onQueryViewColumns(IEspContext &context, IEspQueryViewColumnsRequest &req, IEspQueryViewColumnsResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onAddViewColumn(IEspContext &context, IEspAddViewColumnRequest &req, IEspAddViewColumnResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onDeleteViewColumn(IEspContext &context, IEspDeleteViewColumnRequest &req, IEspDeleteViewColumnResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onQueryViewMembers(IEspContext &context, IEspQueryViewMembersRequest &req, IEspQueryViewMembersResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onAddViewMember(IEspContext &context, IEspAddViewMemberRequest &req, IEspAddViewMemberResponse &resp)
+{
+    return true;
+}
+
+bool Cws_accessEx::onDeleteViewMember(IEspContext &context, IEspDeleteViewMemberRequest &req, IEspDeleteViewMemberResponse &resp)
+{
+    return true;
+}
 
 bool Cws_accessEx::onPermissionAddInput(IEspContext &context, IEspPermissionAddRequest &req, IEspPermissionAddResponse &resp)
 {
