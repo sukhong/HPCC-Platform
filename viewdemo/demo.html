@@ -1,0 +1,245 @@
+<html>
+<head>
+  <title> Column-Level Security View Demo </title>
+  <script src="jquery-3.0.0.js"></script>
+  <script>
+    var server = 'http://127.0.0.1:8010';
+  </script>
+  <style>
+    body {
+      margin: 0px;
+    }
+    .container {
+      width: 100%;
+      height: 500px;
+    }
+    .column {
+      width: 33.33%;
+      height: 100%;
+      display: flex;
+      float: left;
+    }
+
+    .flex_column_container {
+      width: 100%;
+      display: flex;
+      flex-flow: column;
+    }
+
+    .flex_fill {
+      width: 100%;
+      flex: 1 1 auto;
+    }
+
+    .bottom_flex_button {
+      width: 100%;
+      height: 30px;
+      flex: 0 1 auto;
+    }
+
+    .dialog {
+      z-index: 2;
+      position: absolute;
+      margin: auto;
+      width: 50%;
+      height: 60%;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 2px solid grey;
+      background-color: white
+    }
+
+    select option {
+      height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading_bar" style="display: none; z-index: 1; position: fixed; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);"></div>
+  <div style="position: relative;" class="container">
+    <div id="add_view_dialog" class="dialog" style="display: none;">
+      <div style="margin: 10px;">
+        <div>View Name:</div>
+        <input type="text" size="30"/>
+        <div>View Description:</div>
+        <input type="text" size="30"/>
+        <div style="margin: 5px;">
+          <button id="submit_add_view_button">Submit</button>
+          <button id="cancel_add_view_button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="add_column_dialog" class="dialog" style="display: none;">
+      <div>
+        <div class="column" style="width: 50%;">
+          <div class="flex_column_container">
+            <div style="border: 1px solid grey">Files: </div>
+            <select class="flex_fill" size="5">
+              <option>test::file</option>
+              <option>test::morefile</option>
+            </select>
+          </div>
+        </div>
+        <div class="column" style="width: 50%;">
+          <div class="flex_column_container">
+            <div style="border: 1px solid grey">Columns: </div>
+            <select class="flex_fill" size="5">
+              <option>test::file</option>
+              <option>test::morefile</option>
+            </select>
+            <button id="submit_add_column_button" class="bottom_flex_button">Submit</button>
+            <button id="cancel_add_column_button" class="bottom_flex_button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="add_member_dialog" class="dialog" style="display: none;">
+      <div>
+        <div class="column" style="width: 50%;">
+          <div class="flex_column_container">
+            <div style="border: 1px solid grey">Add User: </div>
+            <select class="flex_fill" size="5">
+              <option>russwhitehead</option>
+              <option>stuartort</option>
+              <option>sukhong</option>
+            </select>
+            <button id="submit_add_user_button" class="bottom_flex_button">Add User</button>
+          </div>
+        </div>
+        <div class="column" style="width: 50%;">
+          <div class="flex_column_container">
+            <div style="border: 1px solid grey">Add Group: </div>
+            <select class="flex_fill" size="5">
+              <option>Managers</option>
+              <option>2016 Summer Interns</option>
+            </select>
+            <button id="submit_add_group_button" class="bottom_flex_button">Add Group</button>
+            <button id="cancel_add_member_button" class="bottom_flex_button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="flex_column_container">
+        <select class="flex_fill" size="5">
+          <option>Manager View</option>
+          <option>Intern Developer View</option>
+        </select>
+        <button id="add_view_button" type="button" class="bottom_flex_button">Add View</button>
+        <button id="delete_view_button" type="button" class="bottom_flex_button">Delete View</button>
+      </div>
+    </div>
+    <div class="column">
+      <div class="flex_column_container">
+        <select class="flex_fill" size="5">
+          <option>scope::file.name</option>
+          <option>scope::file.SSN</option>
+        </select>
+        <button id="add_column_button" type="button" class="bottom_flex_button">Add Column</button>
+        <button id="delete_column_button" type="button" class="bottom_flex_button">Delete Column</button>
+      </div>
+    </div>
+    <div class="column">
+      <div class="flex_column_container">
+        <select id="members_list" class="flex_fill" size="5">
+          <option data-membertype="user" data-name="hpccadmin">hpccadmin</option>
+          <option data-membertype="user" data-name="jennifer">jennifer</option>
+          <option data-membertype="group" data-name="summer interns">SUMMER INTERNS (GROUP)</option>
+        </select>
+        <button id="add_member_button" type="button" class="bottom_flex_button">Add Member</button>
+        <button id="delete_member_button" type="button" class="bottom_flex_button">Delete Member</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  /* Basic functions */
+  function showLoadingBar() {
+    $('#loading_bar').show();
+  }
+
+  function hideLoadingBar() {
+    $('#loading_bar').hide();
+  }
+
+  function showDialog(name) {
+    $(name).show();
+    showLoadingBar();
+  }
+
+  function hideDialog(name) {
+    $(name).hide();
+    hideLoadingBar();
+  }
+  </script>
+  <script>
+    /* Add all onClick listeners */
+    $('#add_view_button').click(function(){
+      showDialog('#add_view_dialog');
+    });
+
+    $('#delete_view_button').click(function(){
+      alert('delete view button clicked');
+    });
+
+    $('#submit_add_view_button').click(function(){
+      hideDialog('#add_view_dialog');
+    });
+
+    $('#cancel_add_view_button').click(function(){
+      hideDialog('#add_view_dialog');
+    });
+
+    $('#add_column_button').click(function(){
+      showDialog('#add_column_dialog');
+    });
+
+    $('#delete_column_button').click(function(){
+      alert('delete column button clicked');
+    });
+
+    $('#submit_add_column_button').click(function(){
+      hideDialog('#add_column_dialog');
+    });
+
+    $('#cancel_add_column_button').click(function(){
+      hideDialog('#add_column_dialog');
+    });
+
+    $('#add_member_button').click(function(){
+      showDialog('#add_member_dialog');
+    });
+
+    $('#delete_member_button').click(function(){
+      alert('delete member button clicked');
+    });
+
+    $('#submit_add_user_button').click(function(){
+      hideDialog('#add_member_dialog');
+    });
+
+    $('#submit_add_group_button').click(function(){
+      hideDialog('#add_member_dialog');
+    });
+
+    $('#cancel_add_member_button').click(function(){
+      hideDialog('#add_member_dialog');
+    });
+
+  </script>
+  <script>
+    $.ajax({
+      url: server + "/ws_access/queryViews",
+      async: false
+    }).done(function(data) {
+    }).fail(function(jqXHR, textStatus, errorThrown)
+    {
+      alert(textStatus);
+    });
+  </script>
+</body>
+</html>
