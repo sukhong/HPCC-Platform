@@ -376,6 +376,8 @@ public:
 
         dnbuf.clear();
         cfg->getProp(".//@viewsBasedn", dnbuf);
+        if(dnbuf.length() == 0)//@@TEMP REMOVE THIS WHEN CONFIGMGR SETS viewsBasedn
+            dnbuf.append("ou=views,ou=ecl");//@@TEMP REMOVE THIS WHEN CONFIGMGR SETS viewsBasedn
         if(dnbuf.length() > 0)
             LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_view_basedn);
 
@@ -3528,7 +3530,7 @@ public:
         return true;
     }
 
-    virtual void getAllGroups(StringArray & groups, StringArray & managedBy, StringArray & descriptions)
+    virtual void getAllGroups(StringArray & groups, StringArray & managedBy, StringArray & descriptions, const char * baseDN=nullptr)
     {
         if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
         {
@@ -3562,7 +3564,7 @@ public:
         LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
         char *attrs[] = {"cn", "managedBy", "description", NULL};
 
-        CPagedLDAPSearch pagedSrch(ld, (char*)m_ldapconfig->getGroupBasedn(), LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs);
+        CPagedLDAPSearch pagedSrch(ld, baseDN==nullptr ? (char*)m_ldapconfig->getGroupBasedn() : (char*)baseDN, LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs);
         for (message = pagedSrch.getFirstEntry(); message; message = pagedSrch.getNextEntry())
         {
             // Go through the search results by checking message types
@@ -3853,11 +3855,11 @@ public:
         }       
     }
 
-    virtual void changeUserGroup(const char* action, const char* username, const char* groupname)
+    virtual void changeUserGroup(const char* action, const char* username, const char* groupname, const char * groupDN=nullptr)
     {
         StringBuffer userdn, groupdn;
         getUserDN(username, userdn);
-        getGroupDN(groupname, groupdn);
+        getGroupDN(groupname, groupdn, groupDN);
         // Not needed for Active Directory
         // changeUserMemberOf(action, userdn.str(), groupdn.str());
         changeGroupMember(action, groupdn.str(), userdn.str());
@@ -4012,7 +4014,7 @@ public:
 
     }
 
-    virtual void deleteGroup(const char* groupname)
+    virtual void deleteGroup(const char* groupname, const char * groupsDN=nullptr)
     {
         if(groupname == NULL || *groupname == '\0')
             throw MakeStringException(-1, "group name can't be empty");
@@ -4029,7 +4031,7 @@ public:
         }
 
         StringBuffer dn;
-        getGroupDN(groupname, dn);
+        getGroupDN(groupname, dn, groupsDN);
         
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
@@ -4042,7 +4044,7 @@ public:
         }
     }
 
-    virtual void getGroupMembers(const char* groupname, StringArray & users)
+    virtual void getGroupMembers(const char* groupname, StringArray & users, const char * groupsDN=nullptr)
     {
         char        *attribute;
         LDAPMessage *message;
@@ -4051,7 +4053,7 @@ public:
             throw MakeStringException(-1, "group name can't be empty");
 
         StringBuffer grpdn;
-        getGroupDN(groupname, grpdn);
+        getGroupDN(groupname, grpdn, groupsDN);
         StringBuffer filter;
         if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
         {
@@ -4084,7 +4086,7 @@ public:
 
         char        *attrs[] = {(char*)memfieldname, NULL};
         StringBuffer groupbasedn;
-        getGroupBaseDN(groupname, groupbasedn);
+        getGroupBaseDN(groupname, groupbasedn, groupsDN);
 
         CPagedLDAPSearch pagedSrch(ld, (char*)groupbasedn.str(), LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs);
         for (message = pagedSrch.getFirstEntry(); message; message = pagedSrch.getNextEntry())
@@ -4566,7 +4568,7 @@ private:
         }
     }
 
-    virtual void getGroupDN(const char* groupname, StringBuffer& groupdn)
+    virtual void getGroupDN(const char* groupname, StringBuffer& groupdn, const char * groupBaseDN=nullptr)
     {
         if(groupname == NULL)
             return;
@@ -4582,11 +4584,11 @@ private:
         }
         else
         {
-            groupdn.append(m_ldapconfig->getGroupBasedn());
+            groupdn.append(groupBaseDN == nullptr ? m_ldapconfig->getGroupBasedn() : groupBaseDN);
         }
     }
 
-    virtual void getGroupBaseDN(const char* groupname, StringBuffer& groupbasedn)
+    virtual void getGroupBaseDN(const char* groupname, StringBuffer& groupbasedn, const char * groupBaseDN=nullptr)
     {
         if(groupname == NULL)
             return;
@@ -4601,7 +4603,7 @@ private:
         }
         else
         {
-            groupbasedn.append(m_ldapconfig->getGroupBasedn());
+            groupbasedn.append(groupBaseDN==nullptr ? m_ldapconfig->getGroupBasedn() : groupBaseDN);
         }
     }
 
@@ -5859,7 +5861,20 @@ private:
     {
         if(viewName == NULL || *viewName == '\0')
             throw MakeStringException(-1, "Can't delete view, viewname is empty");
-        deleteGroup(viewName);
+        deleteGroup(viewName, (const char *)m_ldapconfig->getViewBasedn());
+/*
+        StringBuffer dn;
+        dn.appendf("cn=%s,%s", viewName, m_ldapconfig->getViewBasedn());
+
+        Owned<ILdapConnection> lconn = m_connections->getConnection();
+        LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
+        int rc = ldap_delete_ext_s(ld, (char*)dn.str(), NULL, NULL);
+
+        if ( rc != LDAP_SUCCESS )
+        {
+            throw MakeStringException(-1, "error deleting view %s: %s", viewName, ldap_err2string(rc));
+        }
+*/
         //TODO delete lfn/column mappings
     }
 
@@ -5868,7 +5883,7 @@ private:
         StringArray names;
         StringArray managedBy;
         StringArray desc;
-        getAllGroups(names, managedBy, desc);
+        getAllGroups(names, managedBy, desc, (const char *)m_ldapconfig->getViewBasedn());
 
         unsigned len = names.ordinality();
         for(unsigned idx = 0; idx < len; idx++)
@@ -5905,7 +5920,7 @@ private:
         for (unsigned idx = 0; idx < len; idx++)
         {
             //TODO probably need to build user DN string instead of just user name
-            changeUserGroup("add", m_ldapconfig->getViewBasedn(), viewUsers.item(idx));
+            changeUserGroup("add", viewUsers.item(idx), viewName, m_ldapconfig->getViewBasedn());
         }
         //TODO handle groups
 
@@ -5917,14 +5932,14 @@ private:
         for (unsigned idx = 0; idx < len; idx++)
         {
             //TODO probably need to build user DN string instead of just user name
-            changeUserGroup("delete", m_ldapconfig->getViewBasedn(), viewUsers.item(idx));
+            changeUserGroup("delete", viewUsers.item(idx), viewName, m_ldapconfig->getViewBasedn());
         }
         //TODO handle groups
     }
 
     void queryViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
     {
-        getGroupMembers(viewName, viewUsers);
+        getGroupMembers(viewName, viewUsers, m_ldapconfig->getViewBasedn());
         //TODO get group members
     }
 };

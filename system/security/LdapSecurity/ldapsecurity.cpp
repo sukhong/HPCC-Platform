@@ -608,6 +608,65 @@ bool CLdapSecManager::authenticate(ISecUser* user)
     int x = 0;
     if (x)
     {
+    	StringArray foo1, foo2;
+    	const char * p1, * p2;
+
+    	queryAllViews(foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+
+    	foo1.clear();
+    	foo2.clear();
+    	createView("MyView", "Russ's smokin' view");
+    	queryAllViews(foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+
+    	foo1.clear();
+    	foo2.clear();
+   	    queryViewMembers("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("MEMBER %x %s : %s",x, foo1.item(x), foo2.item(x));
+
+
+    	foo1.clear();
+    	foo2.clear();
+    	foo1.append("TheAdmin");
+    	foo1.append("wwhitehead");
+    	addViewMembers("MyView", foo1, foo2);
+
+    	foo1.clear();
+    	foo2.clear();
+   	    queryViewMembers("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("MEMBER %x %s",x, foo1.item(x));
+
+    	foo1.clear();
+    	foo2.clear();
+    	foo1.append("wwhitehead");
+  	    removeViewMembers("MyView", foo1, foo2);
+   	    queryViewMembers("MyView", foo1, foo2);
+
+   	    foo1.clear();
+    	foo2.clear();
+   	    queryViewMembers("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("MEMBER %x %s",x, foo1.item(x));
+
+
+    	deleteView("MyView");
+    	foo1.clear();
+    	foo2.clear();
+    	queryAllViews(foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+
+
+
+
+
+
+
         //Create resource list for each Logical File and columns combos
         Owned<ISecResourceList> resList;
         resList.setown(createResourceList("ColumnScope"));
