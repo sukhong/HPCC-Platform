@@ -2165,16 +2165,75 @@ bool Cws_accessEx::onResourcePermissions(IEspContext &context, IEspResourcePermi
     
 bool Cws_accessEx::onQueryViews(IEspContext &context, IEspQueryViewsRequest &req, IEspQueryViewsResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+        
+        IArrayOf<IEspView> views;
+        
+        StringArray names, descriptions;
+        secmgr->queryAllViews(names, descriptions);
+
+        ForEachItemIn(i, names)
+        {
+            Owned<IEspView> oneView = createView();
+            oneView->setName(names.item(i));
+            oneView->setDescription(descriptions.item(i));
+            views.append(*oneView.getLink());
+        }
+
+        resp.setViews(views);
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
     return true;
 }
 
 bool Cws_accessEx::onAddView(IEspContext &context, IEspAddViewRequest &req, IEspAddViewResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        secmgr->createView(req.getName(), req.getDescription());
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
     return true;
 }
 
 bool Cws_accessEx::onDeleteView(IEspContext &context, IEspDeleteViewRequest &req, IEspDeleteViewResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        secmgr->deleteView(req.getName());
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
