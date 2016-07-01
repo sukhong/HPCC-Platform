@@ -575,7 +575,7 @@ ESPresponse ResourcePermissionsResponse
 /* @@@@@ VIEWS PERMISSIONS */
 ESPstruct View
 {
-    string name;
+    string viewname;
     string description;
 };
 
@@ -585,26 +585,32 @@ ESPrequest QueryViewsRequest
 
 ESPresponse QueryViewsResponse
 {
-   ESParray<ESPstruct View> views; 
+    bool success;
+    string result;
+    ESParray<ESPstruct View> views; 
 };
 
 ESPrequest AddViewRequest
 {
-    string name;
+    string viewname;
     string description;
 };
 
 ESPresponse AddViewResponse
 {
+    bool success;
+    string result;
 };
 
 ESPrequest DeleteViewRequest
 {
-    string name;
+    string viewname;
 };
 
 Espresponse DeleteViewResponse
 {
+    bool success;
+    string result;
 };
 
 ESPenum LogicalFileType : string
@@ -628,6 +634,8 @@ ESPrequest QueryViewColumnsRequest
 
 ESPresponse QueryViewColumnsResponse
 {
+    bool success;
+    string result;
     string viewname;
     ESParray<ESPstruct ViewColumn> viewcolumns;    
 };
@@ -641,6 +649,8 @@ ESPrequest AddViewColumnRequest
 
 ESPresponse AddViewColumnResponse
 {
+    bool success;
+    string result;
 };
 
 ESPrequest DeleteViewColumnRequest
@@ -652,6 +662,8 @@ ESPrequest DeleteViewColumnRequest
 
 ESPresponse DeleteViewColumnResponse
 {
+    bool success;
+    string result;
 };
 
 ESPenum ViewMemberType : string
@@ -673,27 +685,36 @@ ESPrequest QueryViewMembersRequest
 
 ESPresponse QueryViewMembersResponse
 {
+    bool success;
+    string result;
+    string viewname;
     ESParray<ESPstruct ViewMember> viewmembers;
 };
 
 ESPrequest AddViewMemberRequest
 {
-    string name;
+    string viewname;
+    string membername;
     ESPenum ViewMemberType membertype;
 };
 
 ESPresponse AddViewMemberResponse
 {
+    bool success;
+    string result;
 };
 
 ESPrequest DeleteViewMemberRequest
 {
-    string name;
+    string viewname;
+    string membername;
     ESPenum ViewMemberType membertype;
 };
 
 ESPresponse DeleteViewMemberResponse
 {
+    bool success;
+    string result;
 };
 
 

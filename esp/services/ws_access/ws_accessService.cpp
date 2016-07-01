@@ -2175,24 +2175,38 @@ bool Cws_accessEx::onQueryViews(IEspContext &context, IEspQueryViewsRequest &req
         checkUser(context);
         
         IArrayOf<IEspView> views;
-        
         StringArray names, descriptions;
-        secmgr->queryAllViews(names, descriptions);
 
-        ForEachItemIn(i, names)
+        try
         {
-            Owned<IEspView> oneView = createView();
-            oneView->setName(names.item(i));
-            oneView->setDescription(descriptions.item(i));
-            views.append(*oneView.getLink());
+            secmgr->queryAllViews(names, descriptions);
+
+            ForEachItemIn(i, names)
+            {
+                Owned<IEspView> oneView = createView();
+                oneView->setViewname(names.item(i));
+                oneView->setDescription(descriptions.item(i));
+                views.append(*oneView.getLink());
+            }
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
         }
 
+        resp.setSuccess(true);
+        resp.setResult("Successfully queried all views.");
         resp.setViews(views);
     }
     catch (IException* e)
     {
         FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
     }
+
     return true;
 }
 
@@ -2207,7 +2221,21 @@ bool Cws_accessEx::onAddView(IEspContext &context, IEspAddViewRequest &req, IEsp
 
         checkUser(context);
 
-        secmgr->createView(req.getName(), req.getDescription());
+        try
+        {
+            secmgr->createView(req.getViewname(), req.getDescription());
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully added a view.");
     }
     catch (IException* e)
     {
@@ -2227,7 +2255,21 @@ bool Cws_accessEx::onDeleteView(IEspContext &context, IEspDeleteViewRequest &req
 
         checkUser(context);
 
-        secmgr->deleteView(req.getName());
+        try
+        {
+            secmgr->deleteView(req.getViewname());
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully deleted a view.");
     }
     catch (IException* e)
     {
@@ -2254,16 +2296,162 @@ bool Cws_accessEx::onDeleteViewColumn(IEspContext &context, IEspDeleteViewColumn
 
 bool Cws_accessEx::onQueryViewMembers(IEspContext &context, IEspQueryViewMembersRequest &req, IEspQueryViewMembersResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+        
+        const char* reqViewname = req.getViewname();
+        StringArray users, groups;
+        IArrayOf<IEspViewMember> viewMembers;
+
+        try
+        {
+            secmgr->queryViewMembers(reqViewname, users, groups);
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+        
+        ForEachItemIn(i, users)
+        {
+            Owned<IEspViewMember> oneViewMember = createViewMember();
+            oneViewMember->setName(users.item(i));
+            oneViewMember->setMembertype(CViewMemberType_User);
+            viewMembers.append(*oneViewMember.getLink());
+        }
+
+        ForEachItemIn(j, groups)
+        {
+            Owned<IEspViewMember> oneViewMember = createViewMember();
+            oneViewMember->setName(groups.item(j));
+            oneViewMember->setMembertype(CViewMemberType_Group);
+            viewMembers.append(*oneViewMember.getLink());
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully queried view members.");
+        resp.setViewname(reqViewname);
+        resp.setViewmembers(viewMembers);
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
 bool Cws_accessEx::onAddViewMember(IEspContext &context, IEspAddViewMemberRequest &req, IEspAddViewMemberResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        StringArray users, groups;
+
+        if (req.getMembertype() == CViewMemberType_User)
+        {
+            users.append(req.getMembername());
+        }
+        else if (req.getMembertype() == CViewMemberType_Group)
+        {
+            groups.append(req.getMembername());
+        }
+        else
+        {            
+            resp.setSuccess(false);
+            resp.setResult("Invalid member type is specified.");
+            return false;
+        }
+
+        try
+        {
+            secmgr->addViewMembers(req.getViewname(), users, groups);
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully added a view member");
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
 bool Cws_accessEx::onDeleteViewMember(IEspContext &context, IEspDeleteViewMemberRequest &req, IEspDeleteViewMemberResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        StringArray users, groups;
+
+        if (req.getMembertype() == CViewMemberType_User)
+        {
+            users.append(req.getMembername());
+        }
+        else if (req.getMembertype() == CViewMemberType_Group)
+        {
+            groups.append(req.getMembername());
+        }
+        else
+        {
+            resp.setSuccess(false);
+            resp.setResult("Invalid member type is specified.");
+            return false;
+        }
+
+        try
+        {
+            secmgr->removeViewMembers(req.getViewname(), users, groups);
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully deleted a view member.");
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
