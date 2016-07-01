@@ -5839,8 +5839,8 @@ private:
             return -2;
     }
 
-//@@
     //Data View related interfaces
+
     void createView(const char * viewName, const char * viewDescription)
     {
         if(viewName == NULL || *viewName == '\0')
@@ -5854,28 +5854,14 @@ private:
         }
 
         addGroup(viewName, NULL, viewDescription, m_ldapconfig->getViewBasedn());
-        //TODO where to save lfn/column info?  Cassandra?  Nowhere in LDAP for it....
     }
 
     void deleteView(const char * viewName)
     {
         if(viewName == NULL || *viewName == '\0')
             throw MakeStringException(-1, "Can't delete view, viewname is empty");
+
         deleteGroup(viewName, (const char *)m_ldapconfig->getViewBasedn());
-/*
-        StringBuffer dn;
-        dn.appendf("cn=%s,%s", viewName, m_ldapconfig->getViewBasedn());
-
-        Owned<ILdapConnection> lconn = m_connections->getConnection();
-        LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
-        int rc = ldap_delete_ext_s(ld, (char*)dn.str(), NULL, NULL);
-
-        if ( rc != LDAP_SUCCESS )
-        {
-            throw MakeStringException(-1, "error deleting view %s: %s", viewName, ldap_err2string(rc));
-        }
-*/
-        //TODO delete lfn/column mappings
     }
 
     void queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
@@ -5899,19 +5885,154 @@ private:
         }
     }
 
+    void updateViewDescription(const char * viewName, const char * description)
+    {
+        //Update LDAP description
+		StringBuffer filter;
+		if (m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
+			filter.append("objectClass=group");
+		else
+			filter.append("objectClass=groupofuniquenames");
+
+        char *desc_values[] = { (char*)description, NULL };
+        LDAPMod desc_attr = {
+            LDAP_MOD_REPLACE,
+            "description",
+            desc_values
+        };
+
+        LDAPMod *attrs[2];
+        attrs[0] = &desc_attr;
+        attrs[1] = nullptr;
+
+		TIMEVAL timeOut = { LDAPTIMEOUT, 0 };
+		Owned<ILdapConnection> lconn = m_connections->getConnection();
+		LDAP* ld = ((CLdapConnection*) lconn.get())->getLd();
+
+		StringBuffer dn;
+		dn.appendf("CN=%s,%s", viewName, (char*) m_ldapconfig->getViewBasedn());
+		unsigned rc = ldap_modify_ext_s(ld, (char*)dn.str(), attrs, NULL, NULL);
+        if (rc != LDAP_SUCCESS )
+            throw MakeStringException(-1, "Error updating view %s - %s", viewName, ldap_err2string( rc ));
+    }
+
+
     void addViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        //TODO
+    	StringArray currFiles;
+		StringArray currCols;
+        queryViewColumns(viewName, currFiles, currCols);
+
+        unsigned len = files.ordinality();
+        assertex(len == columns.ordinality());
+        for(unsigned idx = 0; idx < len; idx++)
+        {
+        	currFiles.append(files.item(idx));
+        	currCols.append(columns.item(idx));
+        }
+
+        ///build description buffer containing one or more !!!lfn!!col
+        StringBuffer description;
+        len = currFiles.ordinality();
+        for(unsigned idx = 0; idx < len; idx++)
+        {
+        	description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
+        }
+
+        updateViewDescription(viewName, description.str());
     }
 
     void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        //TODO
+    	StringArray currFiles;
+		StringArray currCols;
+        queryViewColumns(viewName, currFiles, currCols);
+
+        unsigned len = files.ordinality();
+        assertex(len == columns.ordinality());
+        for(unsigned idx = 0; idx < len; idx++)//for all pairs to be removed
+        {
+        	unsigned len2 = currFiles.ordinality();
+        	for(unsigned idx2 = 0; idx2 < len2; idx2++)
+        	{
+        		if (0 == stricmp(files.item(idx), currFiles.item(idx2)) &&
+       				0 == stricmp(columns.item(idx), currCols.item(idx2)))
+				{
+					currFiles.remove(idx2);
+					currCols.remove(idx2);
+					break;
+				}
+        	}
+        }
+
+        ///build description buffer containing one or more !!!lfn!!col
+        StringBuffer description;
+        len = currFiles.ordinality();
+        for(unsigned idx = 0; idx < len; idx++)
+        {
+        	description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
+        }
+
+        updateViewDescription(viewName, description.str());
     }
 
     void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-        //TODO
+       StringBuffer filter;
+
+        if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
+            filter.append("objectClass=group");
+        else
+            filter.append("objectClass=groupofuniquenames");
+
+        TIMEVAL timeOut = {LDAPTIMEOUT,0};
+
+        Owned<ILdapConnection> lconn = m_connections->getConnection();
+        LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
+        char *attrs[] = {"description", NULL};
+
+        StringBuffer dn;
+        dn.appendf("CN=%s,%s", viewName, (char*)m_ldapconfig->getViewBasedn() );
+        CPagedLDAPSearch pagedSrch(ld, (char*)dn.str(), LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs);
+        int idx = 0;
+        LDAPMessage *message = pagedSrch.getFirstEntry();
+        if (message)
+        {
+            CLDAPGetAttributesWrapper atts(ld, message);
+            char * attribute = atts.getFirst();
+            if (attribute)
+            {
+                CLDAPGetValuesLenWrapper vals(ld, message, attribute);
+                if(vals.hasValues() && stricmp(attribute, "description") == 0)
+                {
+                	StringBuffer sb(vals.queryCharValue(0));
+                	unsigned len = sb.length();
+					if (!sb.isEmpty())
+					{
+						StringBuffer sbFile;
+						StringBuffer sbCol;
+						unsigned finger = 0;
+						while (finger <= len)
+						{
+							while (finger <= len && sb.charAt(finger) == '!')
+								finger++;//skip to lfn
+							sbFile.clear();
+							while (finger <= len && sb.charAt(finger) != '!')
+								sbFile.append(sb.charAt(finger++));
+							while (finger <= len && sb.charAt(finger) == '!')
+								finger++;//skip to column name
+							sbCol.clear();
+							while (finger <= len && sb.charAt(finger) != '!')
+								sbCol.append(sb.charAt(finger++));
+							while (finger <= len && sb.charAt(finger) == '!')
+								finger++;
+							files.append(sbFile.str());
+							columns.append(sbCol.str());
+						}
+					}
+                }
+            }
+        }
     }
 
     void addViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
@@ -5919,10 +6040,9 @@ private:
         unsigned len = viewUsers.ordinality();
         for (unsigned idx = 0; idx < len; idx++)
         {
-            //TODO probably need to build user DN string instead of just user name
             changeUserGroup("add", viewUsers.item(idx), viewName, m_ldapconfig->getViewBasedn());
         }
-        //TODO handle groups
+        //TODO handle viewGroups
 
     }
 
@@ -5931,16 +6051,15 @@ private:
         unsigned len = viewUsers.ordinality();
         for (unsigned idx = 0; idx < len; idx++)
         {
-            //TODO probably need to build user DN string instead of just user name
             changeUserGroup("delete", viewUsers.item(idx), viewName, m_ldapconfig->getViewBasedn());
         }
-        //TODO handle groups
+        //TODO handle viewGroups
     }
 
     void queryViewMembers(const char * viewName, StringArray & viewUsers, StringArray & viewGroups)
     {
         getGroupMembers(viewName, viewUsers, m_ldapconfig->getViewBasedn());
-        //TODO get group members
+        //TODO get viewGroups
     }
 };
 
