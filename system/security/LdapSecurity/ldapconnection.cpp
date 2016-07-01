@@ -5888,11 +5888,11 @@ private:
     void updateViewDescription(const char * viewName, const char * description)
     {
         //Update LDAP description
-		StringBuffer filter;
-		if (m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
-			filter.append("objectClass=group");
-		else
-			filter.append("objectClass=groupofuniquenames");
+        StringBuffer filter;
+        if (m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
+            filter.append("objectClass=group");
+        else
+            filter.append("objectClass=groupofuniquenames");
 
         char *desc_values[] = { (char*)description, NULL };
         LDAPMod desc_attr = {
@@ -5905,13 +5905,13 @@ private:
         attrs[0] = &desc_attr;
         attrs[1] = nullptr;
 
-		TIMEVAL timeOut = { LDAPTIMEOUT, 0 };
-		Owned<ILdapConnection> lconn = m_connections->getConnection();
-		LDAP* ld = ((CLdapConnection*) lconn.get())->getLd();
+        TIMEVAL timeOut = { LDAPTIMEOUT, 0 };
+        Owned<ILdapConnection> lconn = m_connections->getConnection();
+        LDAP* ld = ((CLdapConnection*) lconn.get())->getLd();
 
-		StringBuffer dn;
-		dn.appendf("CN=%s,%s", viewName, (char*) m_ldapconfig->getViewBasedn());
-		unsigned rc = ldap_modify_ext_s(ld, (char*)dn.str(), attrs, NULL, NULL);
+        StringBuffer dn;
+        dn.appendf("CN=%s,%s", viewName, (char*) m_ldapconfig->getViewBasedn());
+        unsigned rc = ldap_modify_ext_s(ld, (char*)dn.str(), attrs, NULL, NULL);
         if (rc != LDAP_SUCCESS )
             throw MakeStringException(-1, "Error updating view %s - %s", viewName, ldap_err2string( rc ));
     }
@@ -5919,16 +5919,16 @@ private:
 
     void addViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-    	StringArray currFiles;
-		StringArray currCols;
+        StringArray currFiles;
+        StringArray currCols;
         queryViewColumns(viewName, currFiles, currCols);
 
         unsigned len = files.ordinality();
         assertex(len == columns.ordinality());
         for(unsigned idx = 0; idx < len; idx++)
         {
-        	currFiles.append(files.item(idx));
-        	currCols.append(columns.item(idx));
+            currFiles.append(files.item(idx));
+            currCols.append(columns.item(idx));
         }
 
         ///build description buffer containing one or more !!!lfn!!col
@@ -5936,7 +5936,7 @@ private:
         len = currFiles.ordinality();
         for(unsigned idx = 0; idx < len; idx++)
         {
-        	description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
+            description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
         }
 
         updateViewDescription(viewName, description.str());
@@ -5944,25 +5944,25 @@ private:
 
     void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns)
     {
-    	StringArray currFiles;
-		StringArray currCols;
+        StringArray currFiles;
+        StringArray currCols;
         queryViewColumns(viewName, currFiles, currCols);
 
         unsigned len = files.ordinality();
         assertex(len == columns.ordinality());
         for(unsigned idx = 0; idx < len; idx++)//for all pairs to be removed
         {
-        	unsigned len2 = currFiles.ordinality();
-        	for(unsigned idx2 = 0; idx2 < len2; idx2++)
-        	{
-        		if (0 == stricmp(files.item(idx), currFiles.item(idx2)) &&
-       				0 == stricmp(columns.item(idx), currCols.item(idx2)))
-				{
-					currFiles.remove(idx2);
-					currCols.remove(idx2);
-					break;
-				}
-        	}
+            unsigned len2 = currFiles.ordinality();
+            for(unsigned idx2 = 0; idx2 < len2; idx2++)
+            {
+                if (0 == stricmp(files.item(idx), currFiles.item(idx2)) &&
+                    0 == stricmp(columns.item(idx), currCols.item(idx2)))
+                {
+                    currFiles.remove(idx2);
+                    currCols.remove(idx2);
+                    break;
+                }
+            }
         }
 
         ///build description buffer containing one or more !!!lfn!!col
@@ -5970,7 +5970,7 @@ private:
         len = currFiles.ordinality();
         for(unsigned idx = 0; idx < len; idx++)
         {
-        	description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
+            description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
         }
 
         updateViewDescription(viewName, description.str());
@@ -6005,31 +6005,31 @@ private:
                 CLDAPGetValuesLenWrapper vals(ld, message, attribute);
                 if(vals.hasValues() && stricmp(attribute, "description") == 0)
                 {
-                	StringBuffer sb(vals.queryCharValue(0));
-                	unsigned len = sb.length();
-					if (!sb.isEmpty())
-					{
-						StringBuffer sbFile;
-						StringBuffer sbCol;
-						unsigned finger = 0;
-						while (finger <= len)
-						{
-							while (finger <= len && sb.charAt(finger) == '!')
-								finger++;//skip to lfn
-							sbFile.clear();
-							while (finger <= len && sb.charAt(finger) != '!')
-								sbFile.append(sb.charAt(finger++));
-							while (finger <= len && sb.charAt(finger) == '!')
-								finger++;//skip to column name
-							sbCol.clear();
-							while (finger <= len && sb.charAt(finger) != '!')
-								sbCol.append(sb.charAt(finger++));
-							while (finger <= len && sb.charAt(finger) == '!')
-								finger++;
-							files.append(sbFile.str());
-							columns.append(sbCol.str());
-						}
-					}
+                    StringBuffer sb(vals.queryCharValue(0));
+                    unsigned len = sb.length();
+                    if (!sb.isEmpty())
+                    {
+                        StringBuffer sbFile;
+                        StringBuffer sbCol;
+                        unsigned finger = 0;
+                        while (finger <= len)
+                        {
+                            while (finger <= len && sb.charAt(finger) == '!')
+                                finger++;//skip to lfn
+                            sbFile.clear();
+                            while (finger <= len && sb.charAt(finger) != '!')
+                                sbFile.append(sb.charAt(finger++));
+                            while (finger <= len && sb.charAt(finger) == '!')
+                                finger++;//skip to column name
+                            sbCol.clear();
+                            while (finger <= len && sb.charAt(finger) != '!')
+                                sbCol.append(sb.charAt(finger++));
+                            while (finger <= len && sb.charAt(finger) == '!')
+                                finger++;
+                            files.append(sbFile.str());
+                            columns.append(sbCol.str());
+                        }
+                    }
                 }
             }
         }
