@@ -624,7 +624,7 @@ ESPstruct ViewColumn
     string filename;
     ESPenum LogicalFileType filetype;
     bool   isSuperfile;
-    string columname;    
+    string columnname;    
 };
 
 ESPrequest QueryViewColumnsRequest

@@ -2241,6 +2241,7 @@ bool Cws_accessEx::onAddView(IEspContext &context, IEspAddViewRequest &req, IEsp
     {
         FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
     }
+
     return true;
 }
 
@@ -2281,16 +2282,129 @@ bool Cws_accessEx::onDeleteView(IEspContext &context, IEspDeleteViewRequest &req
 
 bool Cws_accessEx::onQueryViewColumns(IEspContext &context, IEspQueryViewColumnsRequest &req, IEspQueryViewColumnsResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+        
+        IArrayOf<IEspViewColumn> viewColumns;
+        StringArray files, columns;
+
+        try
+        {
+            secmgr->queryViewColumns(req.getViewname(), files, columns);
+
+            ForEachItemIn(i, files)
+            {
+                Owned<IEspViewColumn> oneViewColumn = createViewColumn();
+                oneViewColumn->setFilename(files.item(i));
+                oneViewColumn->setColumnname(columns.item(i));
+                viewColumns.append(*oneViewColumn.getLink());
+            }
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully queried all columns.");
+        resp.setViewname(req.getViewname());
+        resp.setViewcolumns(viewColumns);
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
 bool Cws_accessEx::onAddViewColumn(IEspContext &context, IEspAddViewColumnRequest &req, IEspAddViewColumnResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        try
+        {
+            StringArray files, columns;
+
+            files.append(req.getFilename());
+            columns.append(req.getColumnname());
+
+            secmgr->addViewColumns(req.getViewname(), files, columns);
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully added a view column.");
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
 bool Cws_accessEx::onDeleteViewColumn(IEspContext &context, IEspDeleteViewColumnRequest &req, IEspDeleteViewColumnResponse &resp)
 {
+    try
+    {
+        CLdapSecManager* secmgr = queryLDAPSecurityManager(context);
+        
+        if(secmgr == NULL)
+            throw MakeStringException(ECLWATCH_INVALID_SEC_MANAGER, MSG_SEC_MANAGER_IS_NULL);
+
+        checkUser(context);
+
+        try
+        {
+            StringArray files, columns;
+
+            files.append(req.getFilename());
+            columns.append(req.getColumnname());
+
+            secmgr->removeViewColumns(req.getViewname(), files, columns);
+        }
+        catch (IException* e)
+        {
+            StringBuffer failedMsg("Failed: ");
+            StringBuffer eMsg;
+            resp.setSuccess(false);
+            resp.setResult(failedMsg.append(e->errorMessage(eMsg)));
+            return false;
+        }
+
+        resp.setSuccess(true);
+        resp.setResult("Successfully deleted a view column.");
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
