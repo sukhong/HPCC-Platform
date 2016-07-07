@@ -2801,7 +2801,26 @@ protected:
         // NOTE - should be called inside critsec
         if (!childLoaded[childTable.index])
         {
-            CassandraResult result(sessionCache->fetchDataForWuid(childTable.mappings, queryWuid(), false));
+            const CassResult* cassResult;
+            try
+            {
+                cassResult = sessionCache->fetchDataForWuid(childTable.mappings, queryWuid(), false);
+            }
+            catch (IException* e)
+            {
+                int errorCode = e->errorCode();
+                StringBuffer origErrorMsg;
+                e->errorMessage(origErrorMsg);
+                e->Release();
+
+                const char* tableName = queryTableName(childTable.mappings);
+
+                VStringBuffer newErrorMsg("Failed to read from cassandra table '%s' (Have you run wutool to initialize cassandra repository?), [%s]", tableName, origErrorMsg.str());
+
+                rtlFail(errorCode, newErrorMsg);
+            }
+
+            CassandraResult result(cassResult);
             IPTree *results = p->queryPropTree(childTable.parentElement);
             CassandraIterator rows(cass_iterator_from_result(result));
             while (cass_iterator_next(rows))
