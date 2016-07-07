@@ -100,7 +100,7 @@
 
     <div id="add_member_dialog" class="dialog" style="display: none;">
       <div>
-        <div class="column" style="width: 50%;">
+        <div class="column" style="width: 100%;">
           <div class="flex_column_container">
             <div style="border: 1px solid grey">Add User: </div>
             <select class="flex_fill" size="5">
@@ -109,8 +109,10 @@
               <option>sukhong</option>
             </select>
             <button id="submit_add_user_button" class="bottom_flex_button">Add User</button>
+            <button id="cancel_add_member_button" class="bottom_flex_button">Cancel</button>
           </div>
         </div>
+        <!--
         <div class="column" style="width: 50%;">
           <div class="flex_column_container">
             <div style="border: 1px solid grey">Add Group: </div>
@@ -119,9 +121,8 @@
               <option>2016 Summer Interns</option>
             </select>
             <button id="submit_add_group_button" class="bottom_flex_button">Add Group</button>
-            <button id="cancel_add_member_button" class="bottom_flex_button">Cancel</button>
           </div>
-        </div>
+        </div>-->
       </div>
     </div>
 
@@ -183,6 +184,15 @@
     hideLoadingBar();
     hideDialogLoadingBar();
   }
+
+  function alertOnFailure(data) {
+    if ($(data).find('success').text() == 0)
+    {
+      alert($(data).find('result').text());
+      return true;
+    }
+    return false;
+  }
   </script>
   <script>
     /* Add all onClick listeners */
@@ -199,7 +209,27 @@
         return;
       }
 
-      var data = encodeURI('viewname=' + new_view_name + '&description=' + new_view_description);
+      var selected_view_name = viewList.find(':selected').attr('data-name');
+      var data = encodeURI('viewname=' + selected_view_name);
+
+      showLoadingBar();
+
+      $.ajax({
+        url: server + "/ws_access/deleteView",
+        method: "POST",
+        data: data,
+        async: false
+      }).done(function(data) {
+
+        alertOnFailure(data);
+
+        hideLoadingBar();
+        refreshViewList();
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideLoadingBar();
+        alert(textStatus);
+      });
     });
 
     $('#submit_add_view_button').click(function(){
@@ -228,12 +258,44 @@
         data: data,
         async: false
       }).done(function(data) {
+
+        alertOnFailure(data);
+
         hideDialogLoadingBar();
         hideDialog('#add_view_dialog');
         refreshViewList();
       }).fail(function(jqXHR, textStatus, errorThrown)
       {
         hideDialogLoadingBar();
+        alert(textStatus);
+      });
+    });
+
+    $('#view_list').change(function() {
+      var $clickedItem = $(this).children(':selected');
+      var clicked_view_name = $clickedItem.attr('data-name');
+
+      // When a view is clicked, we need to load columns and members for a view
+      showLoadingBar();
+
+      $.ajax({
+        url: server + "/ws_access/queryViews",
+        async: false
+      }).done(function(data) {
+        hideLoadingBar();
+        var viewArray = $(data).find('View');
+
+        $.each(viewArray, function(index, view)
+        {
+          $view = $(view);
+          var viewname = $view.find('viewname').text();
+          var viewdesc = $view.find('description').text();
+          var optionItem = $('<option/>').attr('data-name', viewname).attr('data-desc', viewdesc).text(viewname + ': ' + viewdesc);
+          viewList.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideLoadingBar();
         alert(textStatus);
       });
     });
@@ -298,7 +360,7 @@
         $view = $(view);
         var viewname = $view.find('viewname').text();
         var viewdesc = $view.find('description').text();
-        var optionItem = $('<option/>').attr('data-name', viewname).text(viewname + ': ' + viewdesc);
+        var optionItem = $('<option/>').attr('data-name', viewname).attr('data-desc', viewdesc).text(viewname + ': ' + viewdesc);
         viewList.append(optionItem);
       });
     }).fail(function(jqXHR, textStatus, errorThrown)
