@@ -22,7 +22,8 @@
 #include "ldapsecurity.ipp"
 #include "ldapsecurity.hpp"
 #include "authmap.ipp"
-
+//#include "jlib.hpp"//@@
+//#include "jflz.hpp"//@@
 /**********************************************************
  *     CLdapSecUser                                       *
  **********************************************************/
@@ -503,6 +504,7 @@ void CLdapSecManager::init(const char *serviceName, IPropertyTree* cfg)
 {
     for(int i = 0; i < RT_SCOPE_MAX; i++)
         m_cache_off[i] = false;
+    m_cache_off[RT_VIEW_SCOPE] = true;
     
     m_usercache_off = false;
 
@@ -604,7 +606,133 @@ bool CLdapSecManager::authenticate(ISecUser* user)
 
         user->setAuthenticateStatus(AS_AUTHENTICATED);
     }
+//@@TEMP TEST CODE
+    int x = 0;
+    if (x)
+    {
+        StringArray foo1, foo2;
+        const char * p1, * p2;
+/*
+        queryAllViews(foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
 
+        foo1.clear();    	foo2.clear();
+        createView("MyView", "Russ's smokin' view");
+        queryAllViews(foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+*/
+    	foo1.clear();    	foo2.clear();
+   	    queryViewColumns("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("%x %s %s",x, foo1.item(x), foo2.item(x));
+
+//@@
+//    	const char * pStr = "Firefox can't establish a connection to the server at 10.176.152.81:8010. The site could be temporarily unavailable or too busy. Try again in a few moments. If you are unable to load any pages, check your computer's network connection. If your computer or network is protected by a firewall or proxy, make sure that Firefox is permitted to access the Web.";
+  //  	char result1[1024] = {0};
+    //	char result2[1024] = {0};
+//    	size32_t len1 = fastlz_compress(pStr, strlen(pStr), result1);
+//    	size32_t len2 = fastlz_decompress(result1, len1, result2, sizeof(result2));
+//@@
+#ifdef __FOO
+    	foo1.clear();
+    	foo2.clear();
+    	foo1.append("MyLFN1");
+    	foo2.append("MyCol1");
+   	    addViewColumns("MyView", foo1, foo2);
+
+    	foo1.clear();
+    	foo2.clear();
+   	    queryViewColumns("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
+
+    	foo1.clear();
+    	foo2.clear();
+    	foo1.append("MyLFN2");
+    	foo2.append("MyCol2");
+   	    addViewColumns("MyView", foo1, foo2);
+
+   	    foo1.clear();
+    	foo2.clear();
+   	    queryViewColumns("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
+
+    	foo1.clear();
+    	foo2.clear();
+    	foo1.append("MyLFN1");
+    	foo2.append("myCol1");
+   	    removeViewColumns("MyView", foo1, foo2);
+
+    	foo1.clear();
+    	foo2.clear();
+   	    queryViewColumns("MyView", foo1, foo2);
+    	for (int x=0; x<foo1.ordinality(); x++)
+    		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
+/*
+        foo1.clear();    	foo2.clear();
+        createView("MyView", "Russ's smokin' view");
+        queryAllViews(foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+
+        foo1.clear();    	foo2.clear();
+        queryViewMembers("MyView", foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("MEMBER %x %s : %s",x, foo1.item(x), foo2.item(x));
+
+
+        foo1.clear();    	foo2.clear();
+        foo1.append("TheAdmin");
+        foo1.append("wwhitehead");
+        addViewMembers("MyView", foo1, foo2);
+
+        foo1.clear();    	foo2.clear();
+        queryViewMembers("MyView", foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("MEMBER %x %s",x, foo1.item(x));
+
+        foo1.clear();    	foo2.clear();
+        foo1.append("wwhitehead");
+        removeViewMembers("MyView", foo1, foo2);
+
+        foo1.clear();    	foo2.clear();
+        queryViewMembers("MyView", foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("MEMBER %x %s",x, foo1.item(x));
+
+
+        deleteView("MyView");
+        foo1.clear();    	foo2.clear();
+        queryAllViews(foo1, foo2);
+        for (int x=0; x<foo1.ordinality(); x++)
+            PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
+*/
+
+#endif
+
+        //Create resource list for each Logical File and columns combos
+        Owned<ISecResourceList> resList;
+        resList.setown(createResourceList("MyView"));//View Name
+
+        ISecResource* res = resList->addResource("MyView");
+        res->addParameter("file", "MyLFN1111");
+        res->addParameter("column", "MyCol1");
+        res->setResourceType(RT_VIEW_SCOPE);
+        LINK(res);
+
+        res = resList->addResource("MyView2");
+        res->addParameter("file", "MyLFN2");
+        res->addParameter("column", "MyCol2");
+        res->setResourceType(RT_VIEW_SCOPE);
+        LINK(res);
+
+        bool res2 = authorizeViewScope(*user, resList.get());
+        PROGLOG("RES = %s", res2 ? "OKAY" : "BAD");
+    }
+//@@END TEST CODE
     return ok;
 }
 
@@ -662,7 +790,7 @@ bool CLdapSecManager::authorizeEx(SecResourceType rtype, ISecUser& sec_user, ISe
     }
     else
     {
-        rc = m_ldap_client->authorize(rtype, sec_user, rlist);
+        rc = m_ldap_client->authorize(rtype, sec_user, rlist, reslist->getName());
     }
     return rc;
 }
@@ -858,10 +986,31 @@ int CLdapSecManager::authorizeFileScope(ISecUser & user, const char * filescope)
     else
         return -1;
 }
-    
+
 bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * resources)
 {
     return authorizeEx(RT_FILE_SCOPE, user, resources);
+}
+//@@
+//For all lfn/column resources in the given ISecResourceList, retrieve
+//perms and set them in their respective ISecResource entry.
+//Each ISecResource must have 2 parameters set, "file" and "column"
+
+/*following to be done by caller
+    //Create resource list for each Logical File and columns combos
+    Owned<ISecResourceList> resList;//Each list must contain a single view name. Do not combine
+    resList.setown(createResourceList("ViewName"));//identifies the view name
+    for(int idx = 0; idx < arrColumns.length(); idx++)
+    {
+        ISecResource* res = resList->addResource("file : col");//name must be unique within the list (map)
+        res->addParameter("file", lfn );
+        res->addParameter("column", arrColumns.item(idx) );
+        res->setResourceType(RT_VIEW_SCOPE);
+    }
+*/
+bool CLdapSecManager::authorizeViewScope(ISecUser & user, ISecResourceList * resources)
+{
+    return authorizeEx(RT_VIEW_SCOPE, user, resources);
 }
 
 int CLdapSecManager::authorizeWorkunitScope(ISecUser & user, const char * wuscope)
@@ -1313,6 +1462,52 @@ bool CLdapSecManager::authenticateUser(ISecUser & user, bool &superUser)
         return false;
     superUser = isSuperUser(&user);
     return true;
+}
+
+//Data View related interfaces
+void CLdapSecManager::createView(const char* viewName, const char * viewDescription)
+{
+    m_ldap_client->createView(viewName, viewDescription);
+}
+
+void CLdapSecManager::deleteView(const char* viewName)
+{
+    m_ldap_client->deleteView(viewName);
+}
+
+void CLdapSecManager::queryAllViews(StringArray & viewNames, StringArray & viewDescriptions)
+{
+    m_ldap_client->queryAllViews(viewNames, viewDescriptions);
+}
+
+void CLdapSecManager::addViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    m_ldap_client->addViewColumns(viewName, files, columns);
+}
+
+void CLdapSecManager::removeViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    m_ldap_client->removeViewColumns(viewName, files, columns);
+}
+
+void CLdapSecManager::queryViewColumns(const char* viewName, StringArray & files, StringArray & columns)
+{
+    m_ldap_client->queryViewColumns(viewName, files, columns);
+}
+
+void CLdapSecManager::addViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
+{
+    m_ldap_client->addViewMembers(viewName, viewUsers, viewGroups);
+}
+
+void CLdapSecManager::removeViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
+{
+    m_ldap_client->removeViewMembers(viewName, viewUsers, viewGroups);
+}
+
+void CLdapSecManager::queryViewMembers(const char* viewName, StringArray & viewUsers, StringArray & viewGroups)
+{
+    m_ldap_client->queryViewMembers(viewName, viewUsers, viewGroups);
 }
 
 extern "C"
