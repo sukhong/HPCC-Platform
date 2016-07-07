@@ -41,8 +41,8 @@
       z-index: 2;
       position: absolute;
       margin: auto;
-      width: 50%;
-      height: 60%;
+      width: 75%;
+      height: 75%;
       top: 0;
       left: 0;
       right: 0;
@@ -78,7 +78,7 @@
         <div class="column" style="width: 50%;">
           <div class="flex_column_container">
             <div style="border: 1px solid grey">Files: </div>
-            <select class="flex_fill" size="5">
+            <select id="add_file_list" class="flex_fill" size="5">
               <option>test::file</option>
               <option>test::morefile</option>
             </select>
@@ -87,7 +87,7 @@
         <div class="column" style="width: 50%;">
           <div class="flex_column_container">
             <div style="border: 1px solid grey">Columns: </div>
-            <select class="flex_fill" size="5">
+            <select id="add_column_list" class="flex_fill" size="5">
               <option>test::file</option>
               <option>test::morefile</option>
             </select>
@@ -209,10 +209,14 @@
   function resetScreen() {
     $("#column_list").val([]);
     $("#member_list").val([]);
+    $("#add_file_list").val([]);
+    $("#add_column_list").val([]);
     $("#add_member_list").val([]);
 
     $("#column_list").empty();
     $("#member_list").empty();
+    $("#add_file_list").empty();
+    $("#add_column_list").empty();
     $("#add_member_list").empty();
 
     disableButtons();
@@ -359,8 +363,79 @@
       enableButtons();
     });
 
+    //@@@@@@@@@@@@@@@@@@@@@@@
     $('#add_column_button').click(function(){
       showDialog('#add_column_dialog');
+      showDialogLoadingBar();
+
+      $('#add_file_list').empty();
+      $('#add_column_list').empty();
+
+      var add_file_list = $('#add_file_list');
+      var data = 'rawxml_=true';
+
+      $.ajax({
+        url: server + "/WsDfu/DFUQuery",
+        data: data,
+        async: false
+      }).done(function(data) {
+        hideDialogLoadingBar();
+        var fileArray = $(data).find('DFULogicalFile');
+
+        $.each(fileArray, function(index, view)
+        {
+          $view = $(view);
+          var file_name = $view.find('Name').text();
+          var isSuperfile = $view.find('isSuperfile').text();
+          var optionItem = $('<option/>').attr('data-name', file_name).attr('data-isSuperfile', isSuperfile).text(file_name);
+          add_file_list.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
+    });
+
+    $('#add_file_list').change(function() {
+      var $clickedItem = $(this).children(':selected');
+      var clicked_file_name = $clickedItem.attr('data-name');
+
+      var add_column_list = $('#add_column_list');
+      add_column_list.empty();
+
+      var data = encodeURI('Name=' + clicked_file_name + '&Format=xml&rawxml_=true');
+
+      // When a view is clicked, we need to load columns and members for a view
+      showDialogLoadingBar();
+
+      $.ajax({
+        url: server + "/WsDfu/DFUDefFile",
+        data: data,
+        async: false
+      }).done(function(data) {
+        hideDialogLoadingBar();
+
+        if ($(data).find('Exception').length > 0)
+        {
+          alert($(data).find('Message').text());
+          return;
+        }
+
+        var fieldsArray = $(data).find('Field');
+
+        $.each(fieldsArray, function(index, field)
+        {
+          $field = $(field);
+          var field_name = $field.attr('name');
+          var optionItem = $('<option/>').attr('data-name', field_name).text(field_name);
+          add_column_list.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
     });
 
     $('#delete_column_button').click(function(){
