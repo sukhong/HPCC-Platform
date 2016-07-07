@@ -58,13 +58,14 @@
 </head>
 <body>
   <div id="loading_bar" style="display: none; z-index: 1; position: fixed; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);"></div>
+  <div id="dialog_loading_bar" style="display: none; z-index: 3; position: fixed; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);"></div>
   <div style="position: relative;" class="container">
     <div id="add_view_dialog" class="dialog" style="display: none;">
       <div style="margin: 10px;">
         <div>View Name:</div>
-        <input type="text" size="30"/>
+        <input id="new_view_name" type="text" size="30"/>
         <div>View Description:</div>
-        <input type="text" size="30"/>
+        <input id="new_view_description" type="text" size="30"/>
         <div style="margin: 5px;">
           <button id="submit_add_view_button">Submit</button>
           <button id="cancel_add_view_button">Cancel</button>
@@ -126,9 +127,7 @@
 
     <div class="column">
       <div class="flex_column_container">
-        <select class="flex_fill" size="5">
-          <option>Manager View</option>
-          <option>Intern Developer View</option>
+        <select id="view_list" class="flex_fill" size="5">
         </select>
         <button id="add_view_button" type="button" class="bottom_flex_button">Add View</button>
         <button id="delete_view_button" type="button" class="bottom_flex_button">Delete View</button>
@@ -166,6 +165,14 @@
     $('#loading_bar').hide();
   }
 
+  function showDialogLoadingBar() {
+    $('#dialog_loading_bar').show();
+  }
+
+  function hideDialogLoadingBar() {
+    $('#dialog_loading_bar').hide();
+  }
+
   function showDialog(name) {
     $(name).show();
     showLoadingBar();
@@ -174,6 +181,7 @@
   function hideDialog(name) {
     $(name).hide();
     hideLoadingBar();
+    hideDialogLoadingBar();
   }
   </script>
   <script>
@@ -183,11 +191,51 @@
     });
 
     $('#delete_view_button').click(function(){
-      alert('delete view button clicked');
+      var viewList = $('#view_list');
+
+      if (viewList.val() == null)
+      {
+        alert('Please select a view first');
+        return;
+      }
+
+      var data = encodeURI('viewname=' + new_view_name + '&description=' + new_view_description);
     });
 
     $('#submit_add_view_button').click(function(){
-      hideDialog('#add_view_dialog');
+      var new_view_name = $('#new_view_name').val();
+      var new_view_description = $('#new_view_description').val();
+
+      if (new_view_name == '')
+      {
+        alert('view name is required');
+        return;
+      }
+
+      if (new_view_description == '')
+      {
+        alert('view description is required');
+        return;
+      }
+
+      var data = encodeURI('viewname=' + new_view_name + '&description=' + new_view_description);
+
+      showDialogLoadingBar();
+
+      $.ajax({
+        url: server + "/ws_access/addView",
+        method: "POST",
+        data: data,
+        async: false
+      }).done(function(data) {
+        hideDialogLoadingBar();
+        hideDialog('#add_view_dialog');
+        refreshViewList();
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
     });
 
     $('#cancel_add_view_button').click(function(){
@@ -229,17 +277,38 @@
     $('#cancel_add_member_button').click(function(){
       hideDialog('#add_member_dialog');
     });
-
   </script>
   <script>
+
+  function refreshViewList()
+  {
+    var viewList = $('#view_list');
+    viewList.empty();
+    showLoadingBar();
+
     $.ajax({
       url: server + "/ws_access/queryViews",
       async: false
     }).done(function(data) {
+      hideLoadingBar();
+      var viewArray = $(data).find('View');
+
+      $.each(viewArray, function(index, view)
+      {
+        $view = $(view);
+        var viewname = $view.find('viewname').text();
+        var viewdesc = $view.find('description').text();
+        var optionItem = $('<option/>').attr('data-name', viewname).text(viewname + ': ' + viewdesc);
+        viewList.append(optionItem);
+      });
     }).fail(function(jqXHR, textStatus, errorThrown)
     {
+      hideLoadingBar();
       alert(textStatus);
     });
+  }
+
+  refreshViewList();
   </script>
 </body>
 </html>
