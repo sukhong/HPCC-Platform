@@ -103,10 +103,7 @@
         <div class="column" style="width: 100%;">
           <div class="flex_column_container">
             <div style="border: 1px solid grey">Add User: </div>
-            <select class="flex_fill" size="5">
-              <option>russwhitehead</option>
-              <option>stuartort</option>
-              <option>sukhong</option>
+            <select id="add_member_list" class="flex_fill" size="5">
             </select>
             <button id="submit_add_user_button" class="bottom_flex_button">Add User</button>
             <button id="cancel_add_member_button" class="bottom_flex_button">Cancel</button>
@@ -128,6 +125,7 @@
 
     <div class="column">
       <div class="flex_column_container">
+        <div style="margin: 3px;">Views</div>
         <select id="view_list" class="flex_fill" size="5">
         </select>
         <button id="add_view_button" type="button" class="bottom_flex_button">Add View</button>
@@ -136,6 +134,7 @@
     </div>
     <div class="column">
       <div class="flex_column_container">
+        <div style="margin: 3px;">Columns</div>
         <select id="column_list" class="flex_fill" size="5">
         </select>
         <button id="add_column_button" type="button" class="bottom_flex_button" disabled>Add Column</button>
@@ -144,6 +143,7 @@
     </div>
     <div class="column">
       <div class="flex_column_container">
+        <div style="margin: 3px;">Members</div>
         <select id="member_list" class="flex_fill" size="5">
         </select>
         <button id="add_member_button" type="button" class="bottom_flex_button" disabled>Add Member</button>
@@ -209,16 +209,17 @@
   function resetScreen() {
     $("#column_list").val([]);
     $("#member_list").val([]);
+    $("#add_member_list").val([]);
 
     $("#column_list").empty();
     $("#member_list").empty();
+    $("#add_member_list").empty();
 
     disableButtons();
     refreshViewList();
   }
   </script>
   <script>
-    /* Add all onClick listeners */
     $('#add_view_button').click(function(){
       showDialog('#add_view_dialog');
     });
@@ -289,6 +290,10 @@
       $('#new_view_description').val('');
     });
 
+    $('#cancel_add_view_button').click(function(){
+      hideDialog('#add_view_dialog');
+    });
+
     $('#view_list').change(function() {
       var $clickedItem = $(this).children(':selected');
       var clicked_view_name = $clickedItem.attr('data-name');
@@ -354,10 +359,6 @@
       enableButtons();
     });
 
-    $('#cancel_add_view_button').click(function(){
-      hideDialog('#add_view_dialog');
-    });
-
     $('#add_column_button').click(function(){
       showDialog('#add_column_dialog');
     });
@@ -378,14 +379,95 @@
       showDialog('#add_member_dialog');
 
       showDialogLoadingBar();
+
+      var add_member_list = $('#add_member_list');
+      add_member_list.empty();
+
+      $.ajax({
+        url: server + "/ws_access/Users",
+        async: false
+      }).done(function(data) {
+        hideDialogLoadingBar();
+        var array = $(data).find('User');
+
+        $.each(array, function(index, item)
+        {
+          $item = $(item);
+          var username = $item.find('username').text();
+          var fullname = $item.find('fullname').text();
+          var optionItem = $('<option/>').attr('data-username', username).text(username + ' (' + fullname + ')');
+          add_member_list.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
     });
 
     $('#delete_member_button').click(function(){
-      alert('delete member button clicked');
+      var viewList = $('#view_list');
+      var memberList = $('#member_list');
+
+      if (memberList.val() == null)
+      {
+        alert('Please select a member first');
+        return;
+      }
+
+      var selected_view_name = viewList.find(':selected').attr('data-name');
+      var selected_member_name = memberList.find(':selected').attr('data-name');
+      var data = encodeURI('viewname=' + selected_view_name + '&membername=' + selected_member_name + '&membertype=' + 'User');
+
+      showLoadingBar();
+
+      $.ajax({
+        url: server + "/ws_access/deleteViewMember",
+        method: "POST",
+        data: data,
+        async: false
+      }).done(function(data) {
+        alertOnFailure(data);
+        hideLoadingBar();
+        refreshMemberList();
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideLoadingBar();
+        alert(textStatus);
+      });
     });
 
     $('#submit_add_user_button').click(function(){
+      var addMemberList = $('#add_member_list');
+
+      if (addMemberList.val() == null)
+      {
+        alert('Please select a user to add first');
+        return;
+      }
+
+      var selected_view_name = $('#view_list').find(':selected').attr('data-name');
+      var selected_user_name = addMemberList.find(':selected').attr('data-username');
+      var data = encodeURI('viewname=' + selected_view_name + '&membername=' + selected_user_name + '&membertype=' + 'User');
+
+      showDialogLoadingBar();
+
+      $.ajax({
+        url: server + "/ws_access/addViewMember",
+        method: "POST",
+        data: data,
+        async: false
+      }).done(function(data) {
+        alertOnFailure(data);
+        hideDialogLoadingBar();
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
+
       hideDialog('#add_member_dialog');
+      refreshMemberList();
     });
 
     $('#submit_add_group_button').click(function(){
@@ -431,6 +513,42 @@
 
     $('#column_list').empty();
     $('#member_list').empty();
+  }
+
+  function refreshMemberList()
+  {
+    var member_list = $('#member_list');
+    member_list.empty();
+    showLoadingBar();
+
+    var selected_view_name = $('#view_list').find(':selected').attr('data-name');
+
+    var data = encodeURI('viewname=' + selected_view_name);
+
+    $.ajax({
+      url: server + "/ws_access/queryViewMembers",
+      data: data,
+      async: false
+    }).done(function(data) {
+      alertOnFailure(data);
+
+      hideLoadingBar();
+
+      var viewArray = $(data).find('ViewMember');
+
+      $.each(viewArray, function(index, view)
+      {
+        $view = $(view);
+        var member_name = $view.find('name').text();
+        var member_type = $view.find('membertype').text();
+        var optionItem = $('<option/>').attr('data-name', member_name).attr('data-type', member_type).text(member_name + " (" + member_type + ")");
+        member_list.append(optionItem);
+      });
+    }).fail(function(jqXHR, textStatus, errorThrown)
+    {
+      hideLoadingBar();
+      alert(textStatus);
+    });
   }
 
   resetScreen();
