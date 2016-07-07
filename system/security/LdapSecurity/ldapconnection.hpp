@@ -234,7 +234,7 @@ interface ILdapClient : extends IInterface
     virtual void init(IPermissionProcessor* pp) = 0;
     virtual LdapServerType getServerType() = 0;
     virtual bool authenticate(ISecUser& user) = 0;
-    virtual bool authorize(SecResourceType rtype, ISecUser&, IArrayOf<ISecResource>& resources) = 0;
+    virtual bool authorize(SecResourceType rtype, ISecUser&, IArrayOf<ISecResource>& resources, const char * resName = nullptr) = 0;
     virtual bool addResources(SecResourceType rtype, ISecUser& user, IArrayOf<ISecResource>& resources, SecPermissionType ptype, const char* basedn) = 0;
     virtual bool addUser(ISecUser& user) = 0;
     virtual void getGroups(const char *user, StringArray& groups) = 0;

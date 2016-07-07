@@ -1692,7 +1692,7 @@ public:
         return true;
     };
 
-    virtual bool authorize(SecResourceType rtype, ISecUser& user, IArrayOf<ISecResource>& resources)
+    virtual bool authorize(SecResourceType rtype, ISecUser& user, IArrayOf<ISecResource>& resources, const char * resName = nullptr)
     {
         bool ok = false;
         const char* basedn = m_ldapconfig->getResourceBasedn(rtype);
@@ -1803,10 +1803,20 @@ public:
         }
         else if (rtype == RT_VIEW_SCOPE)
         {
-            IArrayOf<ISecResource> non_emptylist; //list of permissions to check
             int defPerm = queryDefaultPermission(user); //default perm to be applied when no lfn or column provided
+
+            //Get view lfn/col mappings for this view
+            assertex(resources.ordinality() > 0);
+            assertex(resName && *resName != '\0');
+            StringArray viewFiles;
+            StringArray viewColumns;
+            queryViewColumns(resName, viewFiles, viewColumns);
+            unsigned numViewMembers = viewFiles.ordinality();
+            assertex(numViewMembers == viewColumns.ordinality());
+
             StringAttr lfn;
             StringAttr col;
+            unsigned fails = 0;
             ForEachItemIn(idx, resources) //Iterate over all resources in list
             {
                 ISecResource& res = resources.item(idx);
@@ -1814,28 +1824,29 @@ public:
 
                 lfn.set(res.getParameter("file"));
                 col.set(res.getParameter("column"));
-
+#ifdef _DEBUG
+                DBGLOG("Checking '%s' RT_VIEW_SCOPE for lfn %s, col %s", resName, lfn.str(), col.str());
+#endif
                 if (lfn.isEmpty() || col.isEmpty())
                     res.setAccessFlags(defPerm);
                 else
-                    non_emptylist.append(
-                    *LINK(&res)); //add to list to be checked
-#ifdef _DEBUG
-                DBGLOG("Checking RT_VIEW_SCOPE %s::%s", lfn.str(), col.str());
-#endif
-                //Call LDAP to check perms
-                ok = authorizeScope(user, non_emptylist, basedn);
-                if (ok && defPerm != -2) {
-                    ForEachItemIn(x, non_emptylist)
+                {
+                    //Check LDAP
+                    res.setAccessFlags(SecAccess_None);
+                    ++fails;
+                    for (unsigned vIdx = 0; vIdx < numViewMembers; vIdx++)
                     {
-                        ISecResource& res = non_emptylist.item(x);
-                        if (res.getAccessFlags() == -1)
-                            res.setAccessFlags(defPerm);
+                        if (0 == stricmp(lfn.str(), viewFiles.item(vIdx)) &&
+                            0 == stricmp(col.str(), viewColumns.item(vIdx)))
+                        {
+                            res.setAccessFlags(SecAccess_Full);
+                            --fails;
+                            break;
+                        }
                     }
-                } else
-                    break;
+                }
             }
-            return ok;
+            return fails == 0 ? true : false;
         }
         else
         {
@@ -5922,13 +5933,29 @@ private:
         StringArray currFiles;
         StringArray currCols;
         queryViewColumns(viewName, currFiles, currCols);
+        unsigned vCount = currFiles.ordinality();
+        assertex(vCount == currCols.ordinality());
 
         unsigned len = files.ordinality();
         assertex(len == columns.ordinality());
         for(unsigned idx = 0; idx < len; idx++)
         {
-            currFiles.append(files.item(idx));
-            currCols.append(columns.item(idx));
+            bool isDup = false;
+            for (unsigned vIdx = 0; vIdx < vCount; vIdx++)//look for dups
+            {
+                if (0 == stricmp(files.item(idx), currFiles.item(vIdx)) &&
+                    0 == stricmp(columns.item(idx), currCols.item(vIdx)))
+                {
+                    isDup = true;//skip duplicate entry
+                    break;
+                }
+            }
+
+            if (!isDup)
+            {
+                currFiles.append(files.item(idx));
+                currCols.append(columns.item(idx));
+            }
         }
 
         ///build description buffer containing one or more !!!lfn!!col
