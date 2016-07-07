@@ -136,25 +136,21 @@
     </div>
     <div class="column">
       <div class="flex_column_container">
-        <select class="flex_fill" size="5">
-          <option>scope::file.name</option>
-          <option>scope::file.SSN</option>
+        <select id="column_list" class="flex_fill" size="5">
         </select>
-        <button id="add_column_button" type="button" class="bottom_flex_button">Add Column</button>
-        <button id="delete_column_button" type="button" class="bottom_flex_button">Delete Column</button>
+        <button id="add_column_button" type="button" class="bottom_flex_button" disabled>Add Column</button>
+        <button id="delete_column_button" type="button" class="bottom_flex_button" disabled>Delete Column</button>
       </div>
     </div>
     <div class="column">
       <div class="flex_column_container">
-        <select id="members_list" class="flex_fill" size="5">
-          <option data-membertype="user" data-name="hpccadmin">hpccadmin</option>
-          <option data-membertype="user" data-name="jennifer">jennifer</option>
-          <option data-membertype="group" data-name="summer interns">SUMMER INTERNS (GROUP)</option>
+        <select id="member_list" class="flex_fill" size="5">
         </select>
-        <button id="add_member_button" type="button" class="bottom_flex_button">Add Member</button>
-        <button id="delete_member_button" type="button" class="bottom_flex_button">Delete Member</button>
+        <button id="add_member_button" type="button" class="bottom_flex_button" disabled>Add Member</button>
+        <button id="delete_member_button" type="button" class="bottom_flex_button" disabled>Delete Member</button>
       </div>
     </div>
+    <button id="clear_selection_button" type="button" style="float: right; width: 20%; height: 30px; margin: 10px;">Clear Selection</button>
   </div>
   <script>
   /* Basic functions */
@@ -193,6 +189,33 @@
     }
     return false;
   }
+
+  function disableButtons() {
+    $("#delete_view_button").prop("disabled", true);
+    $("#add_column_button").prop("disabled", true);
+    $("#delete_column_button").prop("disabled", true);
+    $("#add_member_button").prop("disabled", true);
+    $("#delete_member_button").prop("disabled", true);
+  }
+
+  function enableButtons() {
+    $("#delete_view_button").prop("disabled", false);
+    $("#add_column_button").prop("disabled", false);
+    $("#delete_column_button").prop("disabled", false);
+    $("#add_member_button").prop("disabled", false);
+    $("#delete_member_button").prop("disabled", false);
+  }
+
+  function resetScreen() {
+    $("#column_list").val([]);
+    $("#member_list").val([]);
+
+    $("#column_list").empty();
+    $("#member_list").empty();
+
+    disableButtons();
+    refreshViewList();
+  }
   </script>
   <script>
     /* Add all onClick listeners */
@@ -220,11 +243,9 @@
         data: data,
         async: false
       }).done(function(data) {
-
         alertOnFailure(data);
-
         hideLoadingBar();
-        refreshViewList();
+        resetScreen();
       }).fail(function(jqXHR, textStatus, errorThrown)
       {
         hideLoadingBar();
@@ -239,12 +260,6 @@
       if (new_view_name == '')
       {
         alert('view name is required');
-        return;
-      }
-
-      if (new_view_description == '')
-      {
-        alert('view description is required');
         return;
       }
 
@@ -269,35 +284,74 @@
         hideDialogLoadingBar();
         alert(textStatus);
       });
+
+      $('#new_view_name').val('');
+      $('#new_view_description').val('');
     });
 
     $('#view_list').change(function() {
       var $clickedItem = $(this).children(':selected');
       var clicked_view_name = $clickedItem.attr('data-name');
 
+      var column_list = $('#column_list');
+      column_list.empty();
+
+      var member_list = $('#member_list');
+      member_list.empty();
+
+      var data = encodeURI('viewname=' + clicked_view_name);
+
       // When a view is clicked, we need to load columns and members for a view
       showLoadingBar();
 
       $.ajax({
-        url: server + "/ws_access/queryViews",
+        url: server + "/ws_access/queryViewColumns",
+        data: data,
         async: false
       }).done(function(data) {
-        hideLoadingBar();
-        var viewArray = $(data).find('View');
+        alertOnFailure(data);
+
+        var viewArray = $(data).find('ViewColumn');
 
         $.each(viewArray, function(index, view)
         {
           $view = $(view);
-          var viewname = $view.find('viewname').text();
-          var viewdesc = $view.find('description').text();
-          var optionItem = $('<option/>').attr('data-name', viewname).attr('data-desc', viewdesc).text(viewname + ': ' + viewdesc);
-          viewList.append(optionItem);
+          var file_name = $view.find('filename').text();
+          var column_name = $view.find('columnname').text();
+          var optionItem = $('<option/>').attr('data-file', file_name).attr('data-column', column_name).text(file_name + "::" + column_name);
+          column_list.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        alert(textStatus);
+      });
+
+      $.ajax({
+        url: server + "/ws_access/queryViewMembers",
+        data: data,
+        async: false
+      }).done(function(data) {
+        alertOnFailure(data);
+
+        hideLoadingBar();
+
+        var viewArray = $(data).find('ViewMember');
+
+        $.each(viewArray, function(index, view)
+        {
+          $view = $(view);
+          var member_name = $view.find('name').text();
+          var member_type = $view.find('membertype').text();
+          var optionItem = $('<option/>').attr('data-name', member_name).attr('data-type', member_type).text(member_name + " (" + member_type + ")");
+          member_list.append(optionItem);
         });
       }).fail(function(jqXHR, textStatus, errorThrown)
       {
         hideLoadingBar();
         alert(textStatus);
       });
+
+      enableButtons();
     });
 
     $('#cancel_add_view_button').click(function(){
@@ -322,6 +376,8 @@
 
     $('#add_member_button').click(function(){
       showDialog('#add_member_dialog');
+
+      showDialogLoadingBar();
     });
 
     $('#delete_member_button').click(function(){
@@ -338,6 +394,10 @@
 
     $('#cancel_add_member_button').click(function(){
       hideDialog('#add_member_dialog');
+    });
+
+    $('#clear_selection_button').click(function(){
+      resetScreen();
     });
   </script>
   <script>
@@ -368,9 +428,12 @@
       hideLoadingBar();
       alert(textStatus);
     });
+
+    $('#column_list').empty();
+    $('#member_list').empty();
   }
 
-  refreshViewList();
+  resetScreen();
   </script>
 </body>
 </html>
