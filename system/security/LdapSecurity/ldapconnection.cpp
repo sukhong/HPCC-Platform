@@ -5896,7 +5896,7 @@ private:
         }
     }
 
-    void updateViewDescription(const char * viewName, const char * description)
+    void updateViewAdminDescription(const char * viewName, const char * description)
     {
         //Update LDAP description
         StringBuffer filter;
@@ -5908,7 +5908,7 @@ private:
         char *desc_values[] = { (char*)description, NULL };
         LDAPMod desc_attr = {
             LDAP_MOD_REPLACE,
-            "description",
+            "adminDescription",
             desc_values
         };
 
@@ -5966,7 +5966,7 @@ private:
             description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
         }
 
-        updateViewDescription(viewName, description.str());
+        updateViewAdminDescription(viewName, description.str());
     }
 
     void removeViewColumns(const char * viewName, StringArray & files, StringArray & columns)
@@ -6000,7 +6000,7 @@ private:
             description.appendf("!!%s!%s",currFiles.item(idx), currCols.item(idx));//use illegal LFN character as separators
         }
 
-        updateViewDescription(viewName, description.str());
+        updateViewAdminDescription(viewName, description.str());
     }
 
     void queryViewColumns(const char * viewName, StringArray & files, StringArray & columns)
@@ -6016,7 +6016,7 @@ private:
 
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = ((CLdapConnection*)lconn.get())->getLd();
-        char *attrs[] = {"description", NULL};
+        char *attrs[] = {"adminDescription", NULL};
 
         StringBuffer dn;
         dn.appendf("CN=%s,%s", viewName, (char*)m_ldapconfig->getViewBasedn() );
@@ -6030,7 +6030,7 @@ private:
             if (attribute)
             {
                 CLDAPGetValuesLenWrapper vals(ld, message, attribute);
-                if(vals.hasValues() && stricmp(attribute, "description") == 0)
+                if(vals.hasValues() && stricmp(attribute, "adminDescription") == 0)
                 {
                     StringBuffer sb(vals.queryCharValue(0));
                     unsigned len = sb.length();

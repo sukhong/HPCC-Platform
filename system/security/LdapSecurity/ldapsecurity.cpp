@@ -22,8 +22,7 @@
 #include "ldapsecurity.ipp"
 #include "ldapsecurity.hpp"
 #include "authmap.ipp"
-//#include "jlib.hpp"//@@
-//#include "jflz.hpp"//@@
+
 /**********************************************************
  *     CLdapSecUser                                       *
  **********************************************************/
@@ -612,7 +611,7 @@ bool CLdapSecManager::authenticate(ISecUser* user)
     {
         StringArray foo1, foo2;
         const char * p1, * p2;
-/*
+
         queryAllViews(foo1, foo2);
         for (int x=0; x<foo1.ordinality(); x++)
             PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
@@ -622,52 +621,45 @@ bool CLdapSecManager::authenticate(ISecUser* user)
         queryAllViews(foo1, foo2);
         for (int x=0; x<foo1.ordinality(); x++)
             PROGLOG("%x %s : %s",x, foo1.item(x), foo2.item(x));
-*/
+
     	foo1.clear();    	foo2.clear();
    	    queryViewColumns("MyView", foo1, foo2);
     	for (int x=0; x<foo1.ordinality(); x++)
     		PROGLOG("%x %s %s",x, foo1.item(x), foo2.item(x));
 
-//@@
-//    	const char * pStr = "Firefox can't establish a connection to the server at 10.176.152.81:8010. The site could be temporarily unavailable or too busy. Try again in a few moments. If you are unable to load any pages, check your computer's network connection. If your computer or network is protected by a firewall or proxy, make sure that Firefox is permitted to access the Web.";
-  //  	char result1[1024] = {0};
-    //	char result2[1024] = {0};
-//    	size32_t len1 = fastlz_compress(pStr, strlen(pStr), result1);
-//    	size32_t len2 = fastlz_decompress(result1, len1, result2, sizeof(result2));
-//@@
+#define __FOO
 #ifdef __FOO
-    	foo1.clear();
-    	foo2.clear();
+    	foo1.clear();    	foo2.clear();
     	foo1.append("MyLFN1");
     	foo2.append("MyCol1");
    	    addViewColumns("MyView", foo1, foo2);
 
-    	foo1.clear();
-    	foo2.clear();
+    	foo1.clear();    	foo2.clear();
    	    queryViewColumns("MyView", foo1, foo2);
     	for (int x=0; x<foo1.ordinality(); x++)
     		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
 
-    	foo1.clear();
-    	foo2.clear();
+    	foo1.clear();    	foo2.clear();
     	foo1.append("MyLFN2");
     	foo2.append("MyCol2");
    	    addViewColumns("MyView", foo1, foo2);
 
-   	    foo1.clear();
-    	foo2.clear();
+   	    foo1.clear();    	foo2.clear();
+    	foo1.append("MyLFN2");
+    	foo2.append("MyCol2");
+   	    addViewColumns("MyView", foo1, foo2);
+
+   	    foo1.clear();    	foo2.clear();
    	    queryViewColumns("MyView", foo1, foo2);
     	for (int x=0; x<foo1.ordinality(); x++)
     		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
 
-    	foo1.clear();
-    	foo2.clear();
+    	foo1.clear();   	foo2.clear();
     	foo1.append("MyLFN1");
     	foo2.append("myCol1");
    	    removeViewColumns("MyView", foo1, foo2);
 
-    	foo1.clear();
-    	foo2.clear();
+    	foo1.clear();    	foo2.clear();
    	    queryViewColumns("MyView", foo1, foo2);
     	for (int x=0; x<foo1.ordinality(); x++)
     		PROGLOG("VIEW MyView --> %s %s", foo1.item(x), foo2.item(x));
@@ -991,7 +983,8 @@ bool CLdapSecManager::authorizeFileScope(ISecUser & user, ISecResourceList * res
 {
     return authorizeEx(RT_FILE_SCOPE, user, resources);
 }
-//@@
+
+//METHOD: authorizeViewScope()
 //For all lfn/column resources in the given ISecResourceList, retrieve
 //perms and set them in their respective ISecResource entry.
 //Each ISecResource must have 2 parameters set, "file" and "column"
