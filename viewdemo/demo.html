@@ -443,7 +443,56 @@
     });
 
     $('#submit_add_column_button').click(function(){
-      hideDialog('#add_column_dialog');
+      var viewsList = $('#view_list');
+      var filesList = $('#add_file_list');
+      var columnsList = $('#add_column_list');
+
+      if (viewsList.val() == null)
+      {
+        alert('For some reason, view is not selected. Please restart the process again...');
+        return;
+      }
+
+      if (filesList.val() == null || columnsList.val() == null)
+      {
+        alert('Please select a column first');
+        return;
+      }
+
+      var selected_view_name = viewsList.find(':selected').attr('data-name');
+      var selected_file_name = filesList.find(':selected').attr('data-name');
+      var selected_column_name = columnsList.find(':selected').attr('data-name');
+
+      $.ajax({
+        url: server + "/ws_access/addViewColumn",
+        data: data,
+        async: false
+      }).done(function(data) {
+        hideDialogLoadingBar();
+
+        if ($(data).find('Exception').length > 0)
+        {
+          alert($(data).find('Message').text());
+          return;
+        }
+
+        var fieldsArray = $(data).find('Field');
+
+        $.each(fieldsArray, function(index, field)
+        {
+          $field = $(field);
+          var field_name = $field.attr('name');
+          var optionItem = $('<option/>').attr('data-name', field_name).text(field_name);
+          add_column_list.append(optionItem);
+        });
+      }).fail(function(jqXHR, textStatus, errorThrown)
+      {
+        hideDialogLoadingBar();
+        alert(textStatus);
+      });
+
+      alert(selected_view_name);
+
     });
 
     $('#cancel_add_column_button').click(function(){
