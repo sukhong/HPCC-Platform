@@ -1380,7 +1380,6 @@ ESPresponse [exceptions_inline] WUListQueriesResponse
 
 ESPStruct [nil_remove] QueryFieldUsage
 {
-    string WUID;
     string queryset;
     string queryname;
     string filename;
@@ -1389,7 +1388,6 @@ ESPStruct [nil_remove] QueryFieldUsage
 
 ESPrequest [nil_remove] WUListQueryFieldUsageRequest
 {
-    string WUID;
     string queryset;
     string queryname;
 };

@@ -1484,6 +1484,94 @@ bool CWsWorkunitsEx::onWUListQueries(IEspContext &context, IEspWUListQueriesRequ
 
 bool CWsWorkunitsEx::onWUListQueryFieldUsage(IEspContext &context, IEspWUListQueryFieldUsageRequest &req, IEspWUListQueryFieldUsageResponse &resp)
 {
+    try
+    {
+        StringAttr qsetname(req.getQueryset());
+        StringAttr queryname(req.getQueryname());
+        StringBuffer respMsg;   
+            
+        Owned<IConstWorkUnit> wu;
+
+        if (qsetname.length() && queryname.length())
+        {
+            Owned<IPropertyTree> qstree = getQueryRegistry(qsetname, true);
+            if (!qstree)
+            {
+                resp.setSuccess(false);
+                respMsg.appendf("QuerySet %s not found", qsetname.get());
+                resp.setResult(respMsg);
+                return false;
+            }
+
+            Owned<IPropertyTree> query = resolveQueryAlias(qstree, queryname);
+            if (!query)
+            {
+                resp.setSuccess(false);
+                respMsg.appendf("Query %s/%s not found", qsetname.get(), queryname.get());
+                resp.setResult(respMsg);
+                return false;
+            }
+
+            Owned<IWorkUnitFactory> wf = getWorkUnitFactory();
+            wu.setown(wf->openWorkUnit(query->queryProp("@wuid")));
+            if (wu)
+            {
+                IArrayOf<IEspQueryFieldUsage> fieldUsages;
+                
+                Owned<IConstWUFileUsageIterator> usedFiles = wu->getFieldUsage();
+                ForEach(*usedFiles)
+                {
+                    Owned<IConstWUFileUsage> usedFile = usedFiles->get();
+
+                    SCMStringBuffer fileName;
+                    usedFile->getName(fileName);
+
+                    Owned<IConstWUFieldUsageIterator> usedFields = usedFile->getFields(); 
+                    ForEach(*usedFields)
+                    {
+                        Owned<IConstWUFieldUsage> usedField = usedFields->get();
+                        
+                        SCMStringBuffer columnName;
+                        usedField->getName(columnName);
+
+                        Owned<IEspQueryFieldUsage> fieldUsage = createQueryFieldUsage();
+                        fieldUsage->setQueryset(qsetname.get());
+                        fieldUsage->setQueryname(queryname.get());
+                        fieldUsage->setFilename(fileName.str());
+                        fieldUsage->setColumnname(columnName.str());
+                        
+                        fieldUsages.append(*fieldUsage.getClear());                        
+                    }
+                }
+
+                resp.setSuccess(true);
+                StringBuffer respMsg;   
+                respMsg.appendf("Successfully retrieved fieldUsage for Query: %s/%s", qsetname.get(), queryname.get());
+                resp.setResult(respMsg);
+                resp.setQueryFieldUsage(fieldUsages);
+                return true;
+            }
+            else
+            {
+                resp.setSuccess(false);
+                respMsg.appendf("Cannot find a workunit for Query %s/%s", qsetname.get(), queryname.get());
+                resp.setResult(respMsg);
+                return false;
+            }
+        }
+        else
+        {
+            resp.setSuccess(false);
+            respMsg.append("Queryset or Queryname is missing");
+            resp.setResult(respMsg);
+            return false;
+        }
+    }
+    catch (IException* e)
+    {
+        FORWARDEXCEPTION(context, e, ECLWATCH_INTERNAL_ERROR);
+    }
+
     return true;
 }
 
