@@ -1482,6 +1482,11 @@ bool CWsWorkunitsEx::onWUListQueries(IEspContext &context, IEspWUListQueriesRequ
     return true;
 }
 
+bool CWsWorkunitsEx::onWUListQueryFieldUsage(IEspContext &context, IEspWUListQueryFieldUsageRequest &req, IEspWUListQueryFieldUsageResponse &resp)
+{
+    return true;
+}
+
 bool CWsWorkunitsEx::onWUListQueriesUsingFile(IEspContext &context, IEspWUListQueriesUsingFileRequest &req, IEspWUListQueriesUsingFileResponse &resp)
 {
     const char *target = req.getTarget();
