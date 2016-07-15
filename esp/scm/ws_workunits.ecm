@@ -1378,7 +1378,7 @@ ESPresponse [exceptions_inline] WUListQueriesResponse
     ESParray<ESPstruct QuerySetQuery> QuerysetQueries;
 };
 
-ESPStruct [nil_remove] QueryFieldUsage
+ESPStruct [nil_remove] QueryUsedField
 {
     string queryset;
     string queryname;
@@ -1386,17 +1386,17 @@ ESPStruct [nil_remove] QueryFieldUsage
     string columnname;
 };
 
-ESPrequest [nil_remove] WUListQueryFieldUsageRequest
+ESPrequest [nil_remove] WUGetQueryFieldUsageRequest
 {
     string queryset;
     string queryname;
 };
 
-ESPresponse [exceptions_inline] WUListQueryFieldUsageResponse
+ESPresponse [exceptions_inline] WUGetQueryFieldUsageResponse
 {
     bool success;
     string result;
-    ESParray<ESPstruct QueryFieldUsage> QueryFieldUsage;  
+    ESParray<ESPstruct QueryUsedField> QueryUsedFields;  
 };
 
 ESPrequest [nil_remove] WUListQueriesUsingFileRequest
@@ -1860,7 +1860,7 @@ ESPservice [
     ESPmethod [resp_xsl_default("/esp/xslt/WUCopyLogicalFiles.xslt")] WUCopyLogicalFiles(WUCopyLogicalFilesRequest, WUCopyLogicalFilesResponse);
     ESPmethod WUQueryConfig(WUQueryConfigRequest, WUQueryConfigResponse);
     ESPmethod WUListQueries(WUListQueriesRequest, WUListQueriesResponse);
-    ESPmethod WUListQueryFieldUsage(WUListQueryFieldUsageRequest, WUListQueryFieldUsageResponse);
+    ESPmethod WUGetQueryFieldUsage(WUGetQueryFieldUsageRequest, WUGetQueryFieldUsageResponse);
     ESPmethod [min_ver("1.59")] WUUpdateQueryEntry(WUUpdateQueryEntryRequest, WUUpdateQueryEntryResponse);
     ESPmethod WUQueryFiles(WUQueryFilesRequest, WUQueryFilesResponse);
     ESPmethod [resp_xsl_default("/esp/xslt/QueriesUsingFile.xslt")] WUListQueriesUsingFile(WUListQueriesUsingFileRequest, WUListQueriesUsingFileResponse);

@@ -1482,7 +1482,7 @@ bool CWsWorkunitsEx::onWUListQueries(IEspContext &context, IEspWUListQueriesRequ
     return true;
 }
 
-bool CWsWorkunitsEx::onWUListQueryFieldUsage(IEspContext &context, IEspWUListQueryFieldUsageRequest &req, IEspWUListQueryFieldUsageResponse &resp)
+bool CWsWorkunitsEx::onWUGetQueryFieldUsage(IEspContext &context, IEspWUGetQueryFieldUsageRequest &req, IEspWUGetQueryFieldUsageResponse &resp)
 {
     try
     {
@@ -1516,31 +1516,31 @@ bool CWsWorkunitsEx::onWUListQueryFieldUsage(IEspContext &context, IEspWUListQue
             wu.setown(wf->openWorkUnit(query->queryProp("@wuid")));
             if (wu)
             {
-                IArrayOf<IEspQueryFieldUsage> fieldUsages;
+                IArrayOf<IEspQueryUsedField> usedFields;
                 
-                Owned<IConstWUFileUsageIterator> usedFiles = wu->getFieldUsage();
-                ForEach(*usedFiles)
+                Owned<IConstWUFileUsageIterator> files = wu->getFieldUsage();
+                ForEach(*files)
                 {
-                    Owned<IConstWUFileUsage> usedFile = usedFiles->get();
+                    Owned<IConstWUFileUsage> file = files->get();
 
                     SCMStringBuffer fileName;
-                    usedFile->getName(fileName);
+                    file->getName(fileName);
 
-                    Owned<IConstWUFieldUsageIterator> usedFields = usedFile->getFields(); 
-                    ForEach(*usedFields)
+                    Owned<IConstWUFieldUsageIterator> fields = file->getFields(); 
+                    ForEach(*fields)
                     {
-                        Owned<IConstWUFieldUsage> usedField = usedFields->get();
+                        Owned<IConstWUFieldUsage> field = fields->get();
                         
                         SCMStringBuffer columnName;
-                        usedField->getName(columnName);
+                        field->getName(columnName);
 
-                        Owned<IEspQueryFieldUsage> fieldUsage = createQueryFieldUsage();
-                        fieldUsage->setQueryset(qsetname.get());
-                        fieldUsage->setQueryname(queryname.get());
-                        fieldUsage->setFilename(fileName.str());
-                        fieldUsage->setColumnname(columnName.str());
+                        Owned<IEspQueryUsedField> usedField = createQueryUsedField();
+                        usedField->setQueryset(qsetname.get());
+                        usedField->setQueryname(queryname.get());
+                        usedField->setFilename(fileName.str());
+                        usedField->setColumnname(columnName.str());
                         
-                        fieldUsages.append(*fieldUsage.getClear());                        
+                        usedFields.append(*usedField.getClear());                        
                     }
                 }
 
@@ -1548,7 +1548,7 @@ bool CWsWorkunitsEx::onWUListQueryFieldUsage(IEspContext &context, IEspWUListQue
                 StringBuffer respMsg;   
                 respMsg.appendf("Successfully retrieved fieldUsage for Query: %s/%s", qsetname.get(), queryname.get());
                 resp.setResult(respMsg);
-                resp.setQueryFieldUsage(fieldUsages);
+                resp.setQueryUsedFields(usedFields);
                 return true;
             }
             else

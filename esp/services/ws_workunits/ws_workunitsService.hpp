@@ -200,7 +200,7 @@ public:
     bool onWUQueryDetails(IEspContext &context, IEspWUQueryDetailsRequest & req, IEspWUQueryDetailsResponse & resp);
     bool onWUListQueries(IEspContext &context, IEspWUListQueriesRequest &req, IEspWUListQueriesResponse &resp);
     bool onWUListQueriesUsingFile(IEspContext &context, IEspWUListQueriesUsingFileRequest &req, IEspWUListQueriesUsingFileResponse &resp);
-    bool onWUListQueryFieldUsage(IEspContext &context, IEspWUListQueryFieldUsageRequest &req, IEspWUListQueryFieldUsageResponse &resp);
+    bool onWUGetQueryFieldUsage(IEspContext &context, IEspWUGetQueryFieldUsageRequest &req, IEspWUGetQueryFieldUsageResponse &resp);
     bool onWUQueryFiles(IEspContext &context, IEspWUQueryFilesRequest &req, IEspWUQueryFilesResponse &resp);
     bool onWUUpdateQueryEntry(IEspContext &context, IEspWUUpdateQueryEntryRequest &req, IEspWUUpdateQueryEntryResponse &resp);
 
